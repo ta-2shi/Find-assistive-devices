@@ -265,6 +265,50 @@ color: #6b7280;
 font-size: 12px;
 }
 
+.quantity-controls {
+display: flex;
+align-items: center;
+gap: 8px;
+margin-right: 8px;
+}
+
+.quantity-btn {
+background: #e5e7eb;
+color: #374151;
+border: none;
+width: 24px;
+height: 24px;
+border-radius: 4px;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 12px;
+font-weight: bold;
+transition: all 0.2s ease;
+}
+
+.quantity-btn:hover {
+background: #d1d5db;
+}
+
+.quantity-btn:disabled {
+background: #f3f4f6;
+color: #9ca3af;
+cursor: not-allowed;
+}
+
+.quantity-display {
+background: #f8fafc;
+padding: 2px 8px;
+border-radius: 4px;
+font-size: 12px;
+font-weight: 600;
+color: #1e293b;
+min-width: 20px;
+text-align: center;
+}
+
 .remove-btn {
 background: #ef4444;
 color: white;
@@ -427,11 +471,20 @@ const mobileCountSpan = document.getElementById('mobileCount');
 // 初期化：保存されたデータを読み込み
 function loadSavedData() {
     try {
-        const savedData = JSON.parse(localStorage.getItem('welfareEquipmentData') || 'null');
-        if (savedData && Array.isArray(savedData) && savedData.length > 0) {
-            welfareEquipment = savedData;
+        const savedEquipmentData = JSON.parse(sessionStorage.getItem('welfareEquipmentData') || 'null');
+        const savedSelectedData = JSON.parse(sessionStorage.getItem('selectedItemsData') || 'null');
+        
+        if (savedEquipmentData && Array.isArray(savedEquipmentData) && savedEquipmentData.length > 0) {
+            welfareEquipment = savedEquipmentData;
             filteredItems = welfareEquipment;
-            showDataStatus(`保存済みデータを読み込みました（${savedData.length}件）`);
+            
+            if (savedSelectedData && Array.isArray(savedSelectedData)) {
+                selectedItems = savedSelectedData;
+            }
+            
+            showDataStatus(`保存済みデータを読み込みました（${savedEquipmentData.length}件）`);
+            updateCalculator();
+            updateMobileCount();
             return true;
         }
     } catch (error) {
@@ -441,10 +494,11 @@ function loadSavedData() {
 }
 
 // データ保存
-function saveData(data) {
+function saveData(equipmentData, selectedData) {
     try {
-        localStorage.setItem('welfareEquipmentData', JSON.stringify(data));
-        localStorage.setItem('welfareEquipmentTimestamp', new Date().toISOString());
+        sessionStorage.setItem('welfareEquipmentData', JSON.stringify(equipmentData));
+        sessionStorage.setItem('selectedItemsData', JSON.stringify(selectedData));
+        sessionStorage.setItem('welfareEquipmentTimestamp', new Date().toISOString());
     } catch (error) {
         console.error('データ保存エラー:', error);
     }
@@ -452,7 +506,7 @@ function saveData(data) {
 
 // データ状況表示
 function showDataStatus(message) {
-    const timestamp = localStorage.getItem('welfareEquipmentTimestamp');
+    const timestamp = sessionStorage.getItem('welfareEquipmentTimestamp');
     let timeText = '';
     if (timestamp) {
         const date = new Date(timestamp);
@@ -536,6 +590,9 @@ updateMobileCount();
 showEmptyState();
 searchInput.value = '';
 
+// データを保存
+saveData(welfareEquipment, selectedItems);
+
 uploadStatus.innerHTML = `<div class="upload-status upload-success">${newEquipment.length}件の福祉用具を読み込みました</div>`;
 
 // 3秒後にステータスを消去
@@ -594,15 +651,18 @@ return;
 }
 
 searchResults.innerHTML = items.map(item => {
-const isSelected = selectedItems.some(selected => selected.id === item.id);
+const selectedItem = selectedItems.find(selected => selected.id === item.id);
+const isSelected = !!selectedItem;
+const quantity = selectedItem ? selectedItem.quantity : 0;
+
 return `
 <div class="result-item">
 <div class="item-info">
 <div class="item-name">${item.name}</div>
 <div class="item-points">${item.points}点/月</div>
 </div>
-<button class="add-btn" onclick="addItem(${item.id})" ${isSelected ? 'disabled' : ''}>
-${isSelected ? '追加済み' : '追加'}
+<button class="add-btn" onclick="addItem(${item.id})">
+${isSelected ? `追加済み (${quantity}個)` : '追加'}
 </button>
 </div>
 `;
@@ -611,25 +671,50 @@ ${isSelected ? '追加済み' : '追加'}
 
 function addItem(itemId) {
 const item = welfareEquipment.find(item => item.id === itemId);
-if (item && !selectedItems.some(selected => selected.id === itemId)) {
-selectedItems.push(item);
+if (!item) return;
+
+const existingIndex = selectedItems.findIndex(selected => selected.id === itemId);
+if (existingIndex !== -1) {
+// 既存のアイテムの場合は個数を増やす
+selectedItems[existingIndex].quantity += 1;
+} else {
+// 新規アイテムの場合は追加
+selectedItems.push({
+...item,
+quantity: 1
+});
+}
+
 updateCalculator();
 updateMobileCount();
+saveData(welfareEquipment, selectedItems);
 // 検索結果を更新して「追加済み」状態を反映
 displaySearchResults(filteredItems);
 }
+
+function updateQuantity(itemId, change) {
+const itemIndex = selectedItems.findIndex(item => item.id === itemId);
+if (itemIndex === -1) return;
+
+selectedItems[itemIndex].quantity = Math.max(1, selectedItems[itemIndex].quantity + change);
+updateCalculator();
+updateMobileCount();
+saveData(welfareEquipment, selectedItems);
+// 検索結果も更新
+displaySearchResults(filteredItems);
 }
 
 function removeItem(itemId) {
 selectedItems = selectedItems.filter(item => item.id !== itemId);
 updateCalculator();
 updateMobileCount();
+saveData(welfareEquipment, selectedItems);
 // 検索結果を更新してボタンの状態を反映
 displaySearchResults(filteredItems);
 }
 
 function updateCalculator() {
-const totalPoints = selectedItems.reduce((sum, item) => sum + item.points, 0);
+const totalPoints = selectedItems.reduce((sum, item) => sum + (item.points * item.quantity), 0);
 totalPointsElement.textContent = `${totalPoints}点`;
 
 if (selectedItems.length === 0) {
@@ -643,7 +728,12 @@ selectedItemsContainer.innerHTML = selectedItems.map(item => `
 <div class="selected-item">
 <div class="selected-item-info">
 <div class="selected-item-name">${item.name}</div>
-<div class="selected-item-points">${item.points}点/月</div>
+<div class="selected-item-points">${item.points}点/月 × ${item.quantity}個 = ${item.points * item.quantity}点</div>
+</div>
+<div class="quantity-controls">
+<button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)" ${item.quantity <= 1 ? 'disabled' : ''}>−</button>
+<div class="quantity-display">${item.quantity}</div>
+<button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
 </div>
 <button class="remove-btn" onclick="removeItem(${item.id})">×</button>
 </div>
@@ -652,13 +742,15 @@ selectedItemsContainer.innerHTML = selectedItems.map(item => `
 }
 
 function updateMobileCount() {
-mobileCountSpan.textContent = selectedItems.length;
+const totalItems = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+mobileCountSpan.textContent = totalItems;
 }
 
 clearAllBtn.addEventListener('click', () => {
 selectedItems = [];
 updateCalculator();
 updateMobileCount();
+saveData(welfareEquipment, selectedItems);
 displaySearchResults(filteredItems);
 });
 
