@@ -354,149 +354,6 @@ font-size: 14px;
 margin-bottom: 16px;
 }
 }
-
-.share-container {
-background: rgba(255, 255, 255, 0.1);
-border-radius: 12px;
-padding: 20px;
-margin-bottom: 20px;
-border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.share-section h3 {
-color: white;
-font-size: 18px;
-margin-bottom: 16px;
-text-align: center;
-}
-
-.share-buttons {
-display: flex;
-gap: 12px;
-justify-content: center;
-margin-bottom: 16px;
-flex-wrap: wrap;
-}
-
-.share-btn {
-background: linear-gradient(45deg, #3b82f6, #2563eb);
-color: white;
-border: none;
-padding: 10px 20px;
-border-radius: 8px;
-cursor: pointer;
-font-weight: 600;
-font-size: 14px;
-transition: all 0.3s ease;
-}
-
-.share-btn:hover:not(:disabled) {
-transform: translateY(-2px);
-box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.share-btn:disabled {
-background: #6b7280;
-cursor: not-allowed;
-transform: none;
-}
-
-.share-btn.secondary {
-background: linear-gradient(45deg, #6b7280, #4b5563);
-}
-
-.share-btn.secondary:hover {
-box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
-}
-
-.share-btn.small {
-padding: 6px 12px;
-font-size: 12px;
-}
-
-.share-code-display {
-background: rgba(255, 255, 255, 0.9);
-border-radius: 8px;
-padding: 16px;
-text-align: center;
-}
-
-.share-code {
-font-family: 'Monaco', 'Consolas', monospace;
-font-size: 18px;
-font-weight: 700;
-color: #1e293b;
-background: #f8fafc;
-padding: 12px 16px;
-border-radius: 6px;
-border: 2px dashed #3b82f6;
-display: inline-block;
-margin: 8px 0;
-letter-spacing: 2px;
-}
-
-.share-code-info {
-font-size: 14px;
-color: #6b7280;
-margin-top: 8px;
-}
-
-.copy-btn {
-background: #10b981;
-color: white;
-border: none;
-padding: 8px 16px;
-border-radius: 6px;
-cursor: pointer;
-font-size: 14px;
-margin-top: 8px;
-transition: all 0.3s ease;
-}
-
-.copy-btn:hover {
-background: #059669;
-}
-
-.load-code-input {
-background: rgba(255, 255, 255, 0.9);
-border-radius: 8px;
-padding: 16px;
-}
-
-.load-code-input input {
-width: 100%;
-padding: 12px;
-border: 2px solid #e5e7eb;
-border-radius: 6px;
-font-size: 16px;
-text-align: center;
-margin-bottom: 12px;
-letter-spacing: 1px;
-text-transform: uppercase;
-}
-
-.load-code-input input:focus {
-outline: none;
-border-color: #3b82f6;
-}
-
-.load-code-input .share-buttons {
-margin-bottom: 0;
-}
-
-.hidden {
-display: none !important;
-}
-
-@media (max-width: 767px) {
-.share-buttons {
-flex-direction: column;
-align-items: center;
-}
-
-.share-btn {
-width: 200px;
-}
 </style>
 </head>
 <body>
@@ -557,13 +414,6 @@ let filteredItems = [];
 
 const fileInput = document.getElementById('fileInput');
 const uploadStatus = document.getElementById('uploadStatus');
-const shareCodeDisplay = document.getElementById('shareCodeDisplay');
-const loadCodeInput = document.getElementById('loadCodeInput');
-const generateShareCodeBtn = document.getElementById('generateShareCode');
-const loadFromCodeBtn = document.getElementById('loadFromCode');
-const shareCodeInput = document.getElementById('shareCodeInput');
-const loadDataBtn = document.getElementById('loadDataBtn');
-const cancelLoadBtn = document.getElementById('cancelLoadBtn');
 const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
 const selectedItemsContainer = document.getElementById('selectedItems');
@@ -574,86 +424,6 @@ const calculator = document.getElementById('calculator');
 const closeCalculatorBtn = document.getElementById('closeCalculator');
 const mobileCountSpan = document.getElementById('mobileCount');
 
-// データ共有用の簡易API（JSONBinを使用）
-const JSONBIN_BASE_URL = 'https://api.jsonbin.io/v3/b';
-
-// ランダムな共有コード生成
-function generateRandomCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
-
-// データをクラウドに保存
-async function shareData(data) {
-    try {
-        const shareCode = generateRandomCode();
-        const payload = {
-            code: shareCode,
-            data: data,
-            timestamp: new Date().toISOString(),
-            version: '1.0'
-        };
-
-        const response = await fetch(JSONBIN_BASE_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': '$2a$10$8K0KqzgFwJ1rHxB/KcVZOew7Nq5ZFJ8V8J8V8J8V8J8V8J8V8J' // ダミーキー
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            return { success: true, shareCode: shareCode, binId: result.metadata.id };
-        } else {
-            throw new Error('データの保存に失敗しました');
-        }
-    } catch (error) {
-        console.error('共有エラー:', error);
-        return { success: false, error: error.message };
-    }
-}
-
-// 共有コードからデータを読み込み（簡易版 - ローカルストレージベース）
-function shareDataLocal(data) {
-    try {
-        const shareCode = generateRandomCode();
-        const sharedData = {
-            code: shareCode,
-            data: data,
-            timestamp: new Date().toISOString()
-        };
-        
-        // 簡易的にローカルストレージに保存（実際のアプリでは外部サービスを使用）
-        localStorage.setItem(`shared_${shareCode}`, JSON.stringify(sharedData));
-        
-        return { success: true, shareCode: shareCode };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
-}
-
-// 共有コードからデータを読み込み
-function loadDataFromCode(shareCode) {
-    try {
-        const key = `shared_${shareCode.toUpperCase()}`;
-        const sharedData = localStorage.getItem(key);
-        
-        if (sharedData) {
-            const parsed = JSON.parse(sharedData);
-            return { success: true, data: parsed.data, timestamp: parsed.timestamp };
-        } else {
-            return { success: false, error: 'コードが見つかりません' };
-        }
-    } catch (error) {
-        return { success: false, error: 'データの読み込みに失敗しました' };
-    }
-}
 // 初期化：保存されたデータを読み込み
 function loadSavedData() {
     try {
@@ -662,13 +432,11 @@ function loadSavedData() {
             welfareEquipment = savedData;
             filteredItems = welfareEquipment;
             showDataStatus(`保存済みデータを読み込みました（${savedData.length}件）`);
-            updateShareButton();
             return true;
         }
     } catch (error) {
         console.error('データ読み込みエラー:', error);
     }
-    updateShareButton();
     return false;
 }
 
@@ -677,18 +445,8 @@ function saveData(data) {
     try {
         localStorage.setItem('welfareEquipmentData', JSON.stringify(data));
         localStorage.setItem('welfareEquipmentTimestamp', new Date().toISOString());
-        updateShareButton();
     } catch (error) {
         console.error('データ保存エラー:', error);
-    }
-}
-
-// 共有ボタンの状態更新
-function updateShareButton() {
-    if (welfareEquipment.length > 0) {
-        generateShareCodeBtn.disabled = false;
-    } else {
-        generateShareCodeBtn.disabled = true;
     }
 }
 
@@ -917,109 +675,6 @@ closeCalculatorBtn.style.display = 'none';
 
 // アプリケーション初期化
 initializeApp();
-
-// 共有機能のイベントリスナー
-generateShareCodeBtn.addEventListener('click', async () => {
-    if (welfareEquipment.length === 0) return;
-    
-    generateShareCodeBtn.disabled = true;
-    generateShareCodeBtn.textContent = '生成中...';
-    
-    const result = shareDataLocal(welfareEquipment);
-    
-    if (result.success) {
-        shareCodeDisplay.innerHTML = `
-            <div class="share-code">${result.shareCode}</div>
-            <div class="share-code-info">
-                このコードを他の端末で入力してデータを共有できます<br>
-                <small>※このデモ版ではブラウザ間での共有はできません</small>
-            </div>
-            <button class="copy-btn" onclick="copyToClipboard('${result.shareCode}')">
-                📋 コピー
-            </button>
-        `;
-        shareCodeDisplay.classList.remove('hidden');
-    } else {
-        alert('共有コードの生成に失敗しました: ' + result.error);
-    }
-    
-    generateShareCodeBtn.disabled = false;
-    generateShareCodeBtn.textContent = '📤 共有コード生成';
-});
-
-loadFromCodeBtn.addEventListener('click', () => {
-    loadCodeInput.classList.remove('hidden');
-    shareCodeDisplay.classList.add('hidden');
-});
-
-cancelLoadBtn.addEventListener('click', () => {
-    loadCodeInput.classList.add('hidden');
-    shareCodeInput.value = '';
-});
-
-loadDataBtn.addEventListener('click', () => {
-    const code = shareCodeInput.value.trim().toUpperCase();
-    if (!code) {
-        alert('共有コードを入力してください');
-        return;
-    }
-    
-    const result = loadDataFromCode(code);
-    
-    if (result.success) {
-        welfareEquipment = result.data;
-        filteredItems = welfareEquipment;
-        saveData(welfareEquipment);
-        
-        selectedItems = [];
-        updateCalculator();
-        updateMobileCount();
-        updateShareButton();
-        showEmptySearchState();
-        searchInput.value = '';
-        
-        const loadDate = new Date(result.timestamp).toLocaleString('ja-JP');
-        showDataStatus(`共有データを読み込みました（${welfareEquipment.length}件、${loadDate}）`);
-        
-        loadCodeInput.classList.add('hidden');
-        shareCodeInput.value = '';
-    } else {
-        alert('データの読み込みに失敗しました: ' + result.error);
-    }
-});
-
-// クリップボードにコピー
-function copyToClipboard(text) {
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => {
-            alert('コードをクリップボードにコピーしました');
-        }).catch(() => {
-            fallbackCopyTextToClipboard(text);
-        });
-    } else {
-        fallbackCopyTextToClipboard(text);
-    }
-}
-
-function fallbackCopyTextToClipboard(text) {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.top = '0';
-    textArea.style.left = '0';
-    textArea.style.position = 'fixed';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    try {
-        document.execCommand('copy');
-        alert('コードをクリップボードにコピーしました');
-    } catch (err) {
-        alert('コピーに失敗しました: ' + text);
-    }
-    
-    document.body.removeChild(textArea);
-}
 
 // PWA用のサービスワーカー登録
 if ('serviceWorker' in navigator) {
