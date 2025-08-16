@@ -52,37 +52,30 @@ margin-bottom: 16px;
 text-align: center;
 }
 
-.data-status {
-background: rgba(34, 197, 94, 0.1);
-border: 1px solid rgba(34, 197, 94, 0.2);
-border-radius: 8px;
-padding: 12px;
-margin-bottom: 16px;
-text-align: center;
+.search-container {
+position: relative;
+margin-bottom: 20px;
 }
 
-.data-status-text {
-color: #166534;
-font-weight: 600;
-font-size: 14px;
-}
-
-.data-controls {
-display: flex;
-gap: 12px;
-justify-content: center;
-margin-bottom: 16px;
-flex-wrap: wrap;
+.search-input {
+width: 100%;
+padding: 16px 20px;
+border: none;
+border-radius: 12px;
+background: rgba(255, 255, 255, 0.9);
+font-size: 16px;
+box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+transition: all 0.3s ease;
 }
 
 .file-upload-container {
+margin-bottom: 20px;
 padding: 20px;
 background: rgba(255, 255, 255, 0.1);
 border-radius: 12px;
 border: 2px dashed rgba(255, 255, 255, 0.3);
 text-align: center;
 transition: all 0.3s ease;
-margin-bottom: 16px;
 }
 
 .file-upload-container:hover {
@@ -90,18 +83,11 @@ border-color: rgba(255, 255, 255, 0.5);
 background: rgba(255, 255, 255, 0.15);
 }
 
-.file-upload-container.collapsed {
-padding: 0;
-background: transparent;
-border: none;
-margin-bottom: 0;
-}
-
 .file-input {
 display: none;
 }
 
-.file-upload-btn, .control-btn {
+.file-upload-btn {
 background: linear-gradient(45deg, #10b981, #059669);
 color: white;
 border: none;
@@ -109,35 +95,12 @@ padding: 12px 24px;
 border-radius: 8px;
 cursor: pointer;
 font-weight: 600;
-font-size: 14px;
-transition: all 0.3s ease;
-}
-
-.file-upload-btn:hover, .control-btn:hover {
-transform: translateY(-2px);
-box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.control-btn.secondary {
-background: linear-gradient(45deg, #6b7280, #4b5563);
-}
-
-.control-btn.secondary:hover {
-box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
-}
-
-.control-btn.danger {
-background: linear-gradient(45deg, #ef4444, #dc2626);
-}
-
-.control-btn.danger:hover {
-box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+margin-bottom: 8px;
 }
 
 .file-upload-text {
 color: rgba(255, 255, 255, 0.8);
 font-size: 14px;
-margin-top: 8px;
 }
 
 .upload-status {
@@ -156,22 +119,6 @@ color: #166534;
 .upload-error {
 background: #fecaca;
 color: #991b1b;
-}
-
-.search-container {
-position: relative;
-margin-bottom: 20px;
-}
-
-.search-input {
-width: 100%;
-padding: 16px 20px;
-border: none;
-border-radius: 12px;
-background: rgba(255, 255, 255, 0.9);
-font-size: 16px;
-box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-transition: all 0.3s ease;
 }
 
 .search-input:focus {
@@ -406,16 +353,6 @@ cursor: pointer;
 font-size: 14px;
 margin-bottom: 16px;
 }
-
-.data-controls {
-flex-direction: column;
-align-items: center;
-gap: 8px;
-}
-}
-
-.hidden {
-display: none !important;
 }
 </style>
 </head>
@@ -424,21 +361,10 @@ display: none !important;
 <div class="header">
 <h1 class="title">福祉用具点数計算アプリ</h1>
 
-<div class="data-status" id="dataStatus">
-<div class="data-status-text" id="dataStatusText">
-デフォルトデータを使用中（20件）
-</div>
-</div>
-
-<div class="data-controls">
-<button class="control-btn" id="uploadNewBtn">新しいファイルをアップロード</button>
-<button class="control-btn secondary" id="resetToDefaultBtn">デフォルトに戻す</button>
-</div>
-
-<div class="file-upload-container collapsed" id="fileUploadContainer">
+<div class="file-upload-container">
 <input type="file" class="file-input" id="fileInput" accept=".xlsx,.xls">
 <button class="file-upload-btn" onclick="document.getElementById('fileInput').click()">
-Excelファイルを選択
+Excelファイルをアップロード
 </button>
 <div class="file-upload-text">
 福祉用具リスト（A列：商品名、B列：点数）
@@ -481,37 +407,11 @@ Excelファイルを選択
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// デフォルトの福祉用具データベース
-const defaultWelfareEquipment = [
-{ id: 1, name: '車いす（自走用標準型）', points: 320 },
-{ id: 2, name: '車いす（介助用標準型）', points: 320 },
-{ id: 3, name: '電動車いす（簡易型）', points: 1230 },
-{ id: 4, name: '車いす付属品（クッション）', points: 50 },
-{ id: 5, name: '特殊寝台（モーター機能1つ）', points: 320 },
-{ id: 6, name: '特殊寝台（モーター機能2つ）', points: 650 },
-{ id: 7, name: '特殊寝台（モーター機能3つ）', points: 970 },
-{ id: 8, name: '特殊寝台付属品（マットレス）', points: 50 },
-{ id: 9, name: '特殊寝台付属品（サイドレール）', points: 50 },
-{ id: 10, name: '床ずれ防止用具（エアーマット）', points: 320 },
-{ id: 11, name: '体位変換器', points: 50 },
-{ id: 12, name: '手すり（工事を伴わないもの）', points: 50 },
-{ id: 13, name: 'スロープ（工事を伴わないもの）', points: 50 },
-{ id: 14, name: '歩行器（歩行車）', points: 320 },
-{ id: 15, name: '歩行補助つえ（T字状・棒状）', points: 50 },
-{ id: 16, name: '歩行補助つえ（多点杖）', points: 100 },
-{ id: 17, name: '認知症老人徘徊感知機器', points: 100 },
-{ id: 18, name: '移動用リフト（つり具部分を除く）', points: 970 },
-{ id: 19, name: '移動用リフト（つり具）', points: 50 },
-{ id: 20, name: '自動排泄処理装置（要介護4・5のみ）', points: 850 }
-];
-
-// アプリケーションの状態管理
+// 福祉用具のデータベース（初期は空）
 let welfareEquipment = [];
 let selectedItems = [];
 let filteredItems = [];
-let isUsingCustomData = false;
 
-// DOM要素の取得
 const fileInput = document.getElementById('fileInput');
 const uploadStatus = document.getElementById('uploadStatus');
 const searchInput = document.getElementById('searchInput');
@@ -523,80 +423,76 @@ const toggleCalculatorBtn = document.getElementById('toggleCalculator');
 const calculator = document.getElementById('calculator');
 const closeCalculatorBtn = document.getElementById('closeCalculator');
 const mobileCountSpan = document.getElementById('mobileCount');
-const uploadNewBtn = document.getElementById('uploadNewBtn');
-const resetToDefaultBtn = document.getElementById('resetToDefaultBtn');
-const fileUploadContainer = document.getElementById('fileUploadContainer');
-const dataStatus = document.getElementById('dataStatus');
-const dataStatusText = document.getElementById('dataStatusText');
 
-// アプリケーション初期化
+// 初期化：保存されたデータを読み込み
+function loadSavedData() {
+    try {
+        const savedData = JSON.parse(localStorage.getItem('welfareEquipmentData') || 'null');
+        if (savedData && Array.isArray(savedData) && savedData.length > 0) {
+            welfareEquipment = savedData;
+            filteredItems = welfareEquipment;
+            showDataStatus(`保存済みデータを読み込みました（${savedData.length}件）`);
+            return true;
+        }
+    } catch (error) {
+        console.error('データ読み込みエラー:', error);
+    }
+    return false;
+}
+
+// データ保存
+function saveData(data) {
+    try {
+        localStorage.setItem('welfareEquipmentData', JSON.stringify(data));
+        localStorage.setItem('welfareEquipmentTimestamp', new Date().toISOString());
+    } catch (error) {
+        console.error('データ保存エラー:', error);
+    }
+}
+
+// データ状況表示
+function showDataStatus(message) {
+    const timestamp = localStorage.getItem('welfareEquipmentTimestamp');
+    let timeText = '';
+    if (timestamp) {
+        const date = new Date(timestamp);
+        timeText = ` (更新: ${date.toLocaleString('ja-JP')})`;
+    }
+    
+    uploadStatus.innerHTML = `<div class="upload-status upload-success">${message}${timeText}</div>`;
+    setTimeout(() => {
+        uploadStatus.innerHTML = '';
+    }, 5000);
+}
+
+// 初回表示の設定
 function initializeApp() {
-loadDataFromStorage();
-updateDataStatus();
-updateCalculator();
-updateMobileCount();
-showEmptyState();
+    if (loadSavedData()) {
+        // データがある場合は検索可能状態
+        showEmptySearchState();
+    } else {
+        // データがない場合はアップロード待ち状態
+        showNoDataState();
+    }
 }
 
-// データをローカルストレージから読み込み
-function loadDataFromStorage() {
-try {
-const savedData = JSON.parse(localStorage.getItem('welfareEquipmentData') || 'null');
-const savedTimestamp = localStorage.getItem('welfareEquipmentTimestamp');
-
-if (savedData && Array.isArray(savedData) && savedData.length > 0) {
-welfareEquipment = savedData;
-isUsingCustomData = true;
-console.log('カスタムデータを読み込みました:', savedData.length, '件');
-if (savedTimestamp) {
-const date = new Date(parseInt(savedTimestamp));
-console.log('データの更新日時:', date.toLocaleString('ja-JP'));
-}
-} else {
-welfareEquipment = [...defaultWelfareEquipment];
-isUsingCustomData = false;
-console.log('デフォルトデータを使用します');
-}
-} catch (error) {
-console.error('データ読み込みエラー:', error);
-welfareEquipment = [...defaultWelfareEquipment];
-isUsingCustomData = false;
-}
-filteredItems = welfareEquipment;
+function showEmptySearchState() {
+    searchResults.innerHTML = `
+        <div class="empty-state">
+            <h3>福祉用具を検索してください</h3>
+            <p>品目名を入力すると検索結果が表示されます</p>
+        </div>
+    `;
 }
 
-// データをローカルストレージに保存
-function saveDataToStorage(data) {
-try {
-localStorage.setItem('welfareEquipmentData', JSON.stringify(data));
-localStorage.setItem('welfareEquipmentTimestamp', Date.now().toString());
-console.log('データを保存しました:', data.length, '件');
-} catch (error) {
-console.error('データ保存エラー:', error);
-throw new Error('データの保存に失敗しました');
-}
-}
-
-// データステータスの更新
-function updateDataStatus() {
-const count = welfareEquipment.length;
-if (isUsingCustomData) {
-const timestamp = localStorage.getItem('welfareEquipmentTimestamp');
-let dateText = '';
-if (timestamp) {
-const date = new Date(parseInt(timestamp));
-dateText = ` (更新: ${date.toLocaleDateString('ja-JP')})`;
-}
-dataStatusText.textContent = `カスタムデータを使用中（${count}件）${dateText}`;
-dataStatus.style.background = 'rgba(59, 130, 246, 0.1)';
-dataStatus.style.borderColor = 'rgba(59, 130, 246, 0.2)';
-dataStatusText.style.color = '#1e40af';
-} else {
-dataStatusText.textContent = `デフォルトデータを使用中（${count}件）`;
-dataStatus.style.background = 'rgba(34, 197, 94, 0.1)';
-dataStatus.style.borderColor = 'rgba(34, 197, 94, 0.2)';
-dataStatusText.style.color = '#166534';
-}
+function showNoDataState() {
+    searchResults.innerHTML = `
+        <div class="empty-state">
+            <h3>データがありません</h3>
+            <p>まず上のボタンからExcelファイルをアップロードしてください</p>
+            <p>（A列：商品名、B列：点数の形式）</p>
+        </div>
+    `;
 }
 
 // Excelファイル読み込み機能
@@ -627,24 +523,20 @@ if (newEquipment.length === 0) {
 throw new Error('有効なデータが見つかりません');
 }
 
-// データを保存して更新
-saveDataToStorage(newEquipment);
+// 福祉用具リストを更新
 welfareEquipment = newEquipment;
 filteredItems = welfareEquipment;
-isUsingCustomData = true;
 
 // 選択済みアイテムをクリア（IDが変わるため）
 selectedItems = [];
 updateCalculator();
 updateMobileCount();
-updateDataStatus();
 
-// UIをリセット
+// 検索結果をリセット
 showEmptyState();
 searchInput.value = '';
-fileUploadContainer.classList.add('collapsed');
 
-uploadStatus.innerHTML = `<div class="upload-status upload-success">${newEquipment.length}件の福祉用具を読み込み、保存しました</div>`;
+uploadStatus.innerHTML = `<div class="upload-status upload-success">${newEquipment.length}件の福祉用具を読み込みました</div>`;
 
 // 3秒後にステータスを消去
 setTimeout(() => {
@@ -659,67 +551,35 @@ setTimeout(() => {
 uploadStatus.innerHTML = '';
 }, 5000);
 }
-
-// ファイル選択をリセット
-fileInput.value = '';
-});
-
-// ボタンイベントリスナー
-uploadNewBtn.addEventListener('click', () => {
-fileUploadContainer.classList.remove('collapsed');
-});
-
-resetToDefaultBtn.addEventListener('click', () => {
-if (confirm('データをデフォルトに戻しますか？保存されたカスタムデータは削除されます。')) {
-try {
-localStorage.removeItem('welfareEquipmentData');
-localStorage.removeItem('welfareEquipmentTimestamp');
-welfareEquipment = [...defaultWelfareEquipment];
-filteredItems = welfareEquipment;
-isUsingCustomData = false;
-
-// 選択済みアイテムをクリア
-selectedItems = [];
-updateCalculator();
-updateMobileCount();
-updateDataStatus();
-
-// UIをリセット
-showEmptyState();
-searchInput.value = '';
-fileUploadContainer.classList.add('collapsed');
-
-alert('デフォルトデータに戻しました');
-} catch (error) {
-console.error('リセットエラー:', error);
-alert('リセットに失敗しました');
-}
-}
 });
 
 // 検索機能
 searchInput.addEventListener('input', (e) => {
-const query = e.target.value.toLowerCase().trim();
+    const query = e.target.value.toLowerCase().trim();
 
-if (query === '') {
-showEmptyState();
-return;
-}
+    if (welfareEquipment.length === 0) {
+        showNoDataState();
+        return;
+    }
 
-filteredItems = welfareEquipment.filter(item => 
-item.name.toLowerCase().includes(query)
-);
+    if (query === '') {
+        showEmptySearchState();
+        return;
+    }
 
-displaySearchResults(filteredItems);
+    filteredItems = welfareEquipment.filter(item => 
+        item.name.toLowerCase().includes(query)
+    );
+
+    displaySearchResults(filteredItems);
 });
 
 function showEmptyState() {
-searchResults.innerHTML = `
-<div class="empty-state">
-<h3>福祉用具を検索してください</h3>
-<p>品目名を入力すると検索結果が表示されます</p>
-</div>
-`;
+    if (welfareEquipment.length === 0) {
+        showNoDataState();
+    } else {
+        showEmptySearchState();
+    }
 }
 
 function displaySearchResults(items) {
@@ -813,7 +673,7 @@ calculator.classList.remove('show');
 closeCalculatorBtn.style.display = 'none';
 });
 
-// アプリケーション初期化実行
+// アプリケーション初期化
 initializeApp();
 
 // PWA用のサービスワーカー登録
@@ -828,3 +688,6 @@ console.log('SW registration failed: ', registrationError);
 });
 });
 }
+</script>
+</body>
+</html>
