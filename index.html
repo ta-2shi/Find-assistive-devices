@@ -526,48 +526,127 @@ animation: spin 1s linear infinite;
 100% { transform: rotate(360deg); }
 }
 
+/* モバイル用のレスポンシブ調整 */
 @media (max-width: 767px) {
-.mobile-toggle {
-display: block;
-}
+  .container {
+    padding: 10px;
+    gap: 10px;
+  }
 
-.calculator {
-display: none;
-position: fixed;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-z-index: 100;
-max-height: 100vh;
-border-radius: 0;
-margin: 0;
-}
+  .header {
+    margin-bottom: 10px;
+    padding: 15px;
+  }
 
-.calculator.show {
-display: flex;
-}
+  .title {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
 
-.close-btn {
-background: #6b7280;
-color: white;
-border: none;
-padding: 8px 16px;
-border-radius: 8px;
-cursor: pointer;
-font-size: 14px;
-margin-bottom: 16px;
-}
+  .search-container {
+    margin-bottom: 10px;
+  }
 
-.item-actions {
-flex-direction: column;
-gap: 4px;
-}
+  /* 検索結果の表示領域を大幅に拡張 */
+  .search-results {
+    min-height: calc(100vh - 280px); /* ヘッダーとボタンを除いた高さ */
+    max-height: calc(100vh - 280px);
+    padding: 15px;
+  }
 
-.add-btn, .edit-btn, .delete-btn {
-padding: 6px 12px;
-font-size: 11px;
-}
+  /* メイン コンテンツ の高さ調整 */
+  .main-content {
+    flex: 1;
+    height: calc(100vh - 270px);
+  }
+
+  .mobile-toggle {
+    display: block;
+    margin-bottom: 10px;
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .calculator {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+    padding: 20px;
+    padding-top: env(safe-area-inset-top, 20px);
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+
+  .calculator.show {
+    display: flex;
+  }
+
+  .close-btn {
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  /* 検索結果のアイテム表示を最適化 */
+  .result-item {
+    margin-bottom: 8px;
+    padding: 12px;
+  }
+
+  .item-actions {
+    flex-direction: column;
+    gap: 4px;
+    min-width: 80px;
+  }
+
+  .add-btn, .edit-btn, .delete-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .item-name {
+    font-size: 14px;
+  }
+
+  .item-points {
+    font-size: 12px;
+  }
+
+  /* iOS Safari の viewport 問題に対応 */
+  .container {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+
+  /* 管理者パネルもコンパクトに */
+  .admin-panel {
+    padding: 15px;
+    margin-bottom: 10px;
+  }
+
+  .manual-add {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  /* キーボードが出た時の対応 */
+  .search-input:focus + .main-content .search-results {
+    max-height: 50vh;
+  }
 }
 </style>
 </head>
