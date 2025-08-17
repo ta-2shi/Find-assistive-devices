@@ -9,8 +9,29 @@
 <meta name="theme-color" content="#2563eb">
 <title>福祉用具点数計算アプリ</title>
 
-<!-- PWA Manifest -->
-<link rel="manifest" data-href="data:application/json;base64,eyJuYW1lIjoi56aP56WJ55So5YW36KGA5pWw6KiI566XIiwic2hvcnRfbmFtZSI6IuemjeWJqeS4g+OAhue2muOAhyIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsInRoZW1lX2NvbG9yIjoiIzI1NjNlYiIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU1USTRJaUJvWldsbmFIUTlJakV5T0NJZ2RtbGxkMEp2ZUQwaU1DQXdJREV5T0NBeE1qZ2lJRlpsY25OcGIyNDlJakV1TVNJZ2VHMXNibk05SW1oMGRIQTZMeTkzZDNjdWR6TXViM0puTHpJd01EQXZjM1puSWo0S0lDQWdQSEpsWTNRZ2QybGtkR2c5SWpFeU9DSWdhR1ZwWjJoMFBTSXhNamdpSUhKNFBTSTJJaUJtYVd4c1BTSWpNalUyTTJWaUlpOCtDaUFnSUNBOGNtVmpkQ0IzYVdSMGFEMGlNVEU0SWlCb1pXbG5hSFE5SWpFeE9DSWdlRDBpTlNJZ2VUMGlOU0lnY25nOUlqWWlJR1pwYkd3OUlpTm1abVptWm1ZaUx6NEtJQ0E4TDNOMlp6NEsiLCJzaXplcyI6IjEyOHgxMjgiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
+  import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+  
+  // Firebase設定
+  const firebaseConfig = {
+    apiKey: "AIzaSyCsKv9UDALkSle0CJ4Ag8pxgisWDbdznnI",
+    authDomain: "find-assistive-devices-apps.firebaseapp.com",
+    projectId: "find-assistive-devices-apps",
+    storageBucket: "find-assistive-devices-apps.firebasestorage.app",
+    messagingSenderId: "474642604597",
+    appId: "1:474642604597:web:45e6f659b3506d44a7477c"
+  };
+
+  // Firebase 初期化
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  
+  // グローバルスコープに公開
+  window.db = db;
+  window.firestore = { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy };
+</script>
 
 <style>
 * {
@@ -52,6 +73,32 @@ margin-bottom: 16px;
 text-align: center;
 }
 
+.mode-toggle {
+display: flex;
+gap: 8px;
+margin-bottom: 20px;
+background: rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+padding: 4px;
+}
+
+.mode-btn {
+flex: 1;
+background: transparent;
+color: rgba(255, 255, 255, 0.7);
+border: none;
+padding: 12px 16px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+transition: all 0.3s ease;
+}
+
+.mode-btn.active {
+background: rgba(255, 255, 255, 0.9);
+color: #1e293b;
+}
+
 .search-container {
 position: relative;
 margin-bottom: 20px;
@@ -68,14 +115,31 @@ box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 transition: all 0.3s ease;
 }
 
-.file-upload-container {
+.admin-panel {
+display: none;
+background: rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+padding: 20px;
 margin-bottom: 20px;
+border: 2px dashed rgba(255, 255, 255, 0.3);
+}
+
+.admin-panel.active {
+display: block;
+}
+
+.upload-section {
+margin-bottom: 20px;
+}
+
+.file-upload-container {
 padding: 20px;
 background: rgba(255, 255, 255, 0.1);
 border-radius: 12px;
 border: 2px dashed rgba(255, 255, 255, 0.3);
 text-align: center;
 transition: all 0.3s ease;
+margin-bottom: 20px;
 }
 
 .file-upload-container:hover {
@@ -103,7 +167,45 @@ color: rgba(255, 255, 255, 0.8);
 font-size: 14px;
 }
 
-.upload-status {
+.manual-add {
+display: grid;
+grid-template-columns: 2fr 1fr auto;
+gap: 12px;
+align-items: end;
+}
+
+.input-group {
+display: flex;
+flex-direction: column;
+}
+
+.input-label {
+color: rgba(255, 255, 255, 0.9);
+font-size: 14px;
+font-weight: 600;
+margin-bottom: 6px;
+}
+
+.manual-input {
+padding: 12px 16px;
+border: none;
+border-radius: 8px;
+background: rgba(255, 255, 255, 0.9);
+font-size: 14px;
+}
+
+.add-manual-btn {
+background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+color: white;
+border: none;
+padding: 12px 20px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+height: fit-content;
+}
+
+.status-message {
 margin-top: 12px;
 padding: 8px 16px;
 border-radius: 6px;
@@ -111,17 +213,22 @@ font-size: 14px;
 font-weight: 600;
 }
 
-.upload-success {
+.status-success {
 background: #dcfce7;
 color: #166534;
 }
 
-.upload-error {
+.status-error {
 background: #fecaca;
 color: #991b1b;
 }
 
-.search-input:focus {
+.status-info {
+background: #dbeafe;
+color: #1e40af;
+}
+
+.search-input:focus, .manual-input:focus {
 outline: none;
 box-shadow: 0 4px 24px rgba(37, 99, 235, 0.2);
 transform: translateY(-2px);
@@ -137,6 +244,17 @@ flex: 1;
 @media (min-width: 768px) {
 .main-content {
 grid-template-columns: 1fr 400px;
+}
+
+.manual-add {
+grid-template-columns: 2fr 1fr auto;
+}
+}
+
+@media (max-width: 500px) {
+.manual-add {
+grid-template-columns: 1fr;
+gap: 8px;
 }
 }
 
@@ -181,15 +299,25 @@ color: #6b7280;
 font-size: 14px;
 }
 
-.add-btn {
-background: linear-gradient(45deg, #10b981, #059669);
-color: white;
+.item-actions {
+display: flex;
+gap: 8px;
+align-items: center;
+}
+
+.add-btn, .edit-btn, .delete-btn {
 border: none;
 padding: 8px 16px;
 border-radius: 8px;
 cursor: pointer;
 font-weight: 600;
 transition: all 0.3s ease;
+font-size: 12px;
+}
+
+.add-btn {
+background: linear-gradient(45deg, #10b981, #059669);
+color: white;
 }
 
 .add-btn:hover {
@@ -200,6 +328,16 @@ transform: scale(1.05);
 background: #d1d5db;
 cursor: not-allowed;
 transform: none;
+}
+
+.edit-btn {
+background: linear-gradient(45deg, #f59e0b, #d97706);
+color: white;
+}
+
+.delete-btn {
+background: linear-gradient(45deg, #ef4444, #dc2626);
+color: white;
 }
 
 .calculator {
@@ -365,6 +503,29 @@ top: 0;
 z-index: 10;
 }
 
+.loading {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+padding: 20px;
+color: #6b7280;
+}
+
+.spinner {
+width: 20px;
+height: 20px;
+border: 2px solid #e5e7eb;
+border-top: 2px solid #6b7280;
+border-radius: 50%;
+animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+
 @media (max-width: 767px) {
 .mobile-toggle {
 display: block;
@@ -397,6 +558,16 @@ cursor: pointer;
 font-size: 14px;
 margin-bottom: 16px;
 }
+
+.item-actions {
+flex-direction: column;
+gap: 4px;
+}
+
+.add-btn, .edit-btn, .delete-btn {
+padding: 6px 12px;
+font-size: 11px;
+}
 }
 </style>
 </head>
@@ -405,6 +576,13 @@ margin-bottom: 16px;
 <div class="header">
 <h1 class="title">福祉用具点数計算アプリ</h1>
 
+<div class="mode-toggle">
+<button class="mode-btn active" id="userMode">利用者モード</button>
+<button class="mode-btn" id="adminMode">管理者モード</button>
+</div>
+
+<div class="admin-panel" id="adminPanel">
+<div class="upload-section">
 <div class="file-upload-container">
 <input type="file" class="file-input" id="fileInput" accept=".xlsx,.xls">
 <button class="file-upload-btn" onclick="document.getElementById('fileInput').click()">
@@ -413,7 +591,22 @@ Excelファイルをアップロード
 <div class="file-upload-text">
 福祉用具リスト（A列：商品名、B列：点数）
 </div>
-<div id="uploadStatus"></div>
+</div>
+
+<div class="manual-add">
+<div class="input-group">
+<label class="input-label">商品名</label>
+<input type="text" class="manual-input" id="manualName" placeholder="商品名を入力">
+</div>
+<div class="input-group">
+<label class="input-label">点数/月</label>
+<input type="number" class="manual-input" id="manualPoints" placeholder="点数">
+</div>
+<button class="add-manual-btn" id="addManualBtn">手動追加</button>
+</div>
+
+<div id="adminStatus"></div>
+</div>
 </div>
 
 <div class="search-container">
@@ -427,9 +620,9 @@ Excelファイルをアップロード
 
 <div class="main-content">
 <div class="search-results" id="searchResults">
-<div class="empty-state">
-<h3>福祉用具を検索してください</h3>
-<p>品目名を入力すると検索結果が表示されます</p>
+<div class="loading">
+<div class="spinner"></div>
+データを読み込み中...
 </div>
 </div>
 
@@ -451,111 +644,173 @@ Excelファイルをアップロード
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// 福祉用具のデータベース（初期は空）
+// グローバル変数
 let welfareEquipment = [];
 let selectedItems = [];
 let filteredItems = [];
+let isAdminMode = false;
 
-const fileInput = document.getElementById('fileInput');
-const uploadStatus = document.getElementById('uploadStatus');
-const searchInput = document.getElementById('searchInput');
-const searchResults = document.getElementById('searchResults');
-const selectedItemsContainer = document.getElementById('selectedItems');
-const totalPointsElement = document.getElementById('totalPoints');
-const clearAllBtn = document.getElementById('clearAll');
-const toggleCalculatorBtn = document.getElementById('toggleCalculator');
-const calculator = document.getElementById('calculator');
-const closeCalculatorBtn = document.getElementById('closeCalculator');
-const mobileCountSpan = document.getElementById('mobileCount');
+// DOM要素
+const elements = {
+userModeBtn: document.getElementById('userMode'),
+adminModeBtn: document.getElementById('adminMode'),
+adminPanel: document.getElementById('adminPanel'),
+fileInput: document.getElementById('fileInput'),
+manualName: document.getElementById('manualName'),
+manualPoints: document.getElementById('manualPoints'),
+addManualBtn: document.getElementById('addManualBtn'),
+adminStatus: document.getElementById('adminStatus'),
+searchInput: document.getElementById('searchInput'),
+searchResults: document.getElementById('searchResults'),
+selectedItemsContainer: document.getElementById('selectedItems'),
+totalPointsElement: document.getElementById('totalPoints'),
+clearAllBtn: document.getElementById('clearAll'),
+toggleCalculatorBtn: document.getElementById('toggleCalculator'),
+calculator: document.getElementById('calculator'),
+closeCalculatorBtn: document.getElementById('closeCalculator'),
+mobileCountSpan: document.getElementById('mobileCount')
+};
 
-// 初期化：保存されたデータを読み込み
-function loadSavedData() {
-    try {
-        const savedEquipmentData = JSON.parse(sessionStorage.getItem('welfareEquipmentData') || 'null');
-        const savedSelectedData = JSON.parse(sessionStorage.getItem('selectedItemsData') || 'null');
-        
-        if (savedEquipmentData && Array.isArray(savedEquipmentData) && savedEquipmentData.length > 0) {
-            welfareEquipment = savedEquipmentData;
-            filteredItems = welfareEquipment;
-            
-            if (savedSelectedData && Array.isArray(savedSelectedData)) {
-                selectedItems = savedSelectedData;
-            }
-            
-            showDataStatus(`保存済みデータを読み込みました（${savedEquipmentData.length}件）`);
-            updateCalculator();
-            updateMobileCount();
-            return true;
-        }
-    } catch (error) {
-        console.error('データ読み込みエラー:', error);
-    }
-    return false;
+// Firebase データベース操作
+const FirebaseDB = {
+async loadEquipment() {
+try {
+const q = window.firestore.query(
+window.firestore.collection(window.db, 'welfare_equipment'),
+window.firestore.orderBy('name')
+);
+const querySnapshot = await window.firestore.getDocs(q);
+const equipment = [];
+querySnapshot.forEach((doc) => {
+equipment.push({
+id: doc.id,
+...doc.data()
+});
+});
+return equipment;
+} catch (error) {
+console.error('データ読み込みエラー:', error);
+throw error;
+}
+},
+
+async addEquipment(name, points) {
+try {
+const docRef = await window.firestore.addDoc(
+window.firestore.collection(window.db, 'welfare_equipment'),
+{
+name: name.trim(),
+points: parseInt(points),
+createdAt: new Date()
+}
+);
+return docRef.id;
+} catch (error) {
+console.error('データ追加エラー:', error);
+throw error;
+}
+},
+
+async updateEquipment(id, name, points) {
+try {
+await window.firestore.updateDoc(
+window.firestore.doc(window.db, 'welfare_equipment', id),
+{
+name: name.trim(),
+points: parseInt(points),
+updatedAt: new Date()
+}
+);
+} catch (error) {
+console.error('データ更新エラー:', error);
+throw error;
+}
+},
+
+async deleteEquipment(id) {
+try {
+await window.firestore.deleteDoc(
+window.firestore.doc(window.db, 'welfare_equipment', id)
+);
+} catch (error) {
+console.error('データ削除エラー:', error);
+throw error;
+}
+}
+};
+
+// 初期化
+async function initializeApp() {
+try {
+await loadEquipmentData();
+showEmptySearchState();
+loadSelectedItems();
+} catch (error) {
+showError('データベース接続エラーが発生しました。');
+}
 }
 
-// データ保存
-function saveData(equipmentData, selectedData) {
-    try {
-        sessionStorage.setItem('welfareEquipmentData', JSON.stringify(equipmentData));
-        sessionStorage.setItem('selectedItemsData', JSON.stringify(selectedData));
-        sessionStorage.setItem('welfareEquipmentTimestamp', new Date().toISOString());
-    } catch (error) {
-        console.error('データ保存エラー:', error);
-    }
+// 福祉用具データの読み込み
+async function loadEquipmentData() {
+try {
+welfareEquipment = await FirebaseDB.loadEquipment();
+filteredItems = welfareEquipment;
+showInfo(`${welfareEquipment.length}件のデータを読み込みました`);
+} catch (error) {
+throw error;
+}
 }
 
-// データ状況表示
-function showDataStatus(message) {
-    const timestamp = sessionStorage.getItem('welfareEquipmentTimestamp');
-    let timeText = '';
-    if (timestamp) {
-        const date = new Date(timestamp);
-        timeText = ` (更新: ${date.toLocaleString('ja-JP')})`;
-    }
-    
-    uploadStatus.innerHTML = `<div class="upload-status upload-success">${message}${timeText}</div>`;
-    setTimeout(() => {
-        uploadStatus.innerHTML = '';
-    }, 5000);
+// 選択済みアイテムの読み込み
+function loadSelectedItems() {
+try {
+const saved = sessionStorage.getItem('selectedWelfareItems');
+if (saved) {
+selectedItems = JSON.parse(saved);
+updateCalculator();
+updateMobileCount();
+}
+} catch (error) {
+selectedItems = [];
+}
 }
 
-// 初回表示の設定
-function initializeApp() {
-    if (loadSavedData()) {
-        // データがある場合は検索可能状態
-        showEmptySearchState();
-    } else {
-        // データがない場合はアップロード待ち状態
-        showNoDataState();
-    }
+// 選択済みアイテムの保存
+function saveSelectedItems() {
+try {
+sessionStorage.setItem('selectedWelfareItems', JSON.stringify(selectedItems));
+} catch (error) {
+console.error('選択アイテム保存エラー:', error);
+}
 }
 
-function showEmptySearchState() {
-    searchResults.innerHTML = `
-        <div class="empty-state">
-            <h3>福祉用具を検索してください</h3>
-            <p>品目名を入力すると検索結果が表示されます</p>
-        </div>
-    `;
+// モード切り替え
+elements.userModeBtn.addEventListener('click', () => switchMode(false));
+elements.adminModeBtn.addEventListener('click', () => switchMode(true));
+
+function switchMode(admin) {
+isAdminMode = admin;
+elements.userModeBtn.classList.toggle('active', !admin);
+elements.adminModeBtn.classList.toggle('active', admin);
+elements.adminPanel.classList.toggle('active', admin);
+
+// 検索結果を更新
+if (elements.searchInput.value.trim()) {
+performSearch(elements.searchInput.value);
+} else {
+showEmptySearchState();
+}
 }
 
-function showNoDataState() {
-    searchResults.innerHTML = `
-        <div class="empty-state">
-            <h3>データがありません</h3>
-            <p>まず上のボタンからExcelファイルをアップロードしてください</p>
-            <p>（A列：商品名、B列：点数の形式）</p>
-        </div>
-    `;
-}
+// Excel ファイルアップロード
+elements.fileInput.addEventListener('change', handleFileUpload);
 
-// Excelファイル読み込み機能
-fileInput.addEventListener('change', async (e) => {
+async function handleFileUpload(e) {
 const file = e.target.files[0];
 if (!file) return;
 
 try {
-uploadStatus.innerHTML = '<div class="upload-status">読み込み中...</div>';
+showInfo('ファイルを読み込み中...');
 
 const arrayBuffer = await file.arrayBuffer();
 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
@@ -563,85 +818,105 @@ const firstSheetName = workbook.SheetNames[0];
 const worksheet = workbook.Sheets[firstSheetName];
 const data = XLSX.utils.sheet_to_json(worksheet, { header: ['name', 'points'], range: 1 });
 
-// データをクリーンアップして変換
-const newEquipment = data
-.filter(row => row.name && row.points) // 空の行を除外
-.map((row, index) => ({
-id: Date.now() + index, // ユニークなIDを生成
+const validData = data
+.filter(row => row.name && row.points)
+.map(row => ({
 name: String(row.name).trim(),
 points: parseInt(row.points) || 0
 }))
-.filter(item => item.name !== '' && item.points > 0); // 有効なデータのみ
+.filter(item => item.name && item.points > 0);
 
-if (newEquipment.length === 0) {
-throw new Error('有効なデータが見つかりません');
+if (validData.length === 0) {
+throw new Error('有効なデータが見つかりませんでした');
 }
 
-// 福祉用具リストを更新
-welfareEquipment = newEquipment;
-filteredItems = welfareEquipment;
+showInfo(`${validData.length}件のデータをデータベースに保存中...`);
 
-// 選択済みアイテムをクリア（IDが変わるため）
-selectedItems = [];
-updateCalculator();
-updateMobileCount();
+// Firebase に保存
+let addedCount = 0;
+for (const item of validData) {
+try {
+await FirebaseDB.addEquipment(item.name, item.points);
+addedCount++;
+} catch (error) {
+console.error(`"${item.name}" の保存に失敗:`, error);
+}
+}
 
-// 検索結果をリセット
-showEmptyState();
-searchInput.value = '';
+// データを再読み込み
+await loadEquipmentData();
+showEmptySearchState();
 
-// データを保存
-saveData(welfareEquipment, selectedItems);
-
-uploadStatus.innerHTML = `<div class="upload-status upload-success">${newEquipment.length}件の福祉用具を読み込みました</div>`;
-
-// 3秒後にステータスを消去
-setTimeout(() => {
-uploadStatus.innerHTML = '';
-}, 3000);
+showSuccess(`${addedCount}件のデータをデータベースに保存しました`);
 
 } catch (error) {
-console.error('ファイル読み込みエラー:', error);
-uploadStatus.innerHTML = `<div class="upload-status upload-error">エラー: ${error.message}</div>`;
+console.error('ファイルアップロードエラー:', error);
+showError(`エラー: ${error.message}`);
+} finally {
+elements.fileInput.value = '';
+}
+}
 
-setTimeout(() => {
-uploadStatus.innerHTML = '';
-}, 5000);
+// 手動追加
+elements.addManualBtn.addEventListener('click', handleManualAdd);
+
+async function handleManualAdd() {
+const name = elements.manualName.value.trim();
+const points = parseInt(elements.manualPoints.value);
+
+if (!name || !points || points <= 0) {
+showError('商品名と有効な点数を入力してください');
+return;
+}
+
+try {
+showInfo('データを保存中...');
+await FirebaseDB.addEquipment(name, points);
+await loadEquipmentData();
+
+elements.manualName.value = '';
+elements.manualPoints.value = '';
+showSuccess(`"${name}" を追加しました`);
+
+// 検索結果を更新
+if (elements.searchInput.value.trim()) {
+performSearch(elements.searchInput.value);
+} else {
+showEmptySearchState();
+}
+
+} catch (error) {
+console.error('手動追加エラー:', error);
+showError('データの追加に失敗しました');
+}
+}
+
+// 検索機能
+elements.searchInput.addEventListener('input', (e) => {
+const query = e.target.value.trim();
+if (query === '') {
+showEmptySearchState();
+} else {
+performSearch(query);
 }
 });
 
-// 検索機能
-searchInput.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase().trim();
+function performSearch(query) {
+if (welfareEquipment.length === 0) {
+showNoDataState();
+return;
+}
 
-    if (welfareEquipment.length === 0) {
-        showNoDataState();
-        return;
-    }
+filteredItems = welfareEquipment.filter(item => 
+item.name.toLowerCase().includes(query.toLowerCase())
+);
 
-    if (query === '') {
-        showEmptySearchState();
-        return;
-    }
-
-    filteredItems = welfareEquipment.filter(item => 
-        item.name.toLowerCase().includes(query)
-    );
-
-    displaySearchResults(filteredItems);
-});
-
-function showEmptyState() {
-    if (welfareEquipment.length === 0) {
-        showNoDataState();
-    } else {
-        showEmptySearchState();
-    }
+displaySearchResults(filteredItems);
 }
 
 function displaySearchResults(items) {
 if (items.length === 0) {
-searchResults.innerHTML = `
+elements.searchResults.innerHTML = `
 <div class="empty-state">
 <h3>該当する品目が見つかりません</h3>
 <p>別のキーワードで検索してみてください</p>
@@ -650,10 +925,15 @@ searchResults.innerHTML = `
 return;
 }
 
-searchResults.innerHTML = items.map(item => {
+elements.searchResults.innerHTML = items.map(item => {
 const selectedItem = selectedItems.find(selected => selected.id === item.id);
 const isSelected = !!selectedItem;
 const quantity = selectedItem ? selectedItem.quantity : 0;
+
+const adminButtons = isAdminMode ? `
+<button class="edit-btn" onclick="editItem('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.points})">編集</button>
+<button class="delete-btn" onclick="deleteItem('${item.id}', '${item.name.replace(/'/g, "\\'")}')">削除</button>
+` : '';
 
 return `
 <div class="result-item">
@@ -661,24 +941,26 @@ return `
 <div class="item-name">${item.name}</div>
 <div class="item-points">${item.points}点/月</div>
 </div>
-<button class="add-btn" onclick="addItem(${item.id})">
+<div class="item-actions">
+<button class="add-btn" onclick="addItem('${item.id}')">
 ${isSelected ? `追加済み (${quantity}個)` : '追加'}
 </button>
+${adminButtons}
+</div>
 </div>
 `;
 }).join('');
 }
 
+// アイテム操作
 function addItem(itemId) {
 const item = welfareEquipment.find(item => item.id === itemId);
 if (!item) return;
 
 const existingIndex = selectedItems.findIndex(selected => selected.id === itemId);
 if (existingIndex !== -1) {
-// 既存のアイテムの場合は個数を増やす
 selectedItems[existingIndex].quantity += 1;
 } else {
-// 新規アイテムの場合は追加
 selectedItems.push({
 ...item,
 quantity: 1
@@ -687,8 +969,7 @@ quantity: 1
 
 updateCalculator();
 updateMobileCount();
-saveData(welfareEquipment, selectedItems);
-// 検索結果を更新して「追加済み」状態を反映
+saveSelectedItems();
 displaySearchResults(filteredItems);
 }
 
@@ -699,8 +980,7 @@ if (itemIndex === -1) return;
 selectedItems[itemIndex].quantity = Math.max(1, selectedItems[itemIndex].quantity + change);
 updateCalculator();
 updateMobileCount();
-saveData(welfareEquipment, selectedItems);
-// 検索結果も更新
+saveSelectedItems();
 displaySearchResults(filteredItems);
 }
 
@@ -708,34 +988,69 @@ function removeItem(itemId) {
 selectedItems = selectedItems.filter(item => item.id !== itemId);
 updateCalculator();
 updateMobileCount();
-saveData(welfareEquipment, selectedItems);
-// 検索結果を更新してボタンの状態を反映
+saveSelectedItems();
 displaySearchResults(filteredItems);
 }
 
+async function editItem(id, currentName, currentPoints) {
+const newName = prompt('商品名を編集:', currentName);
+if (!newName || newName.trim() === '') return;
+
+const newPoints = prompt('点数を編集:', currentPoints);
+const points = parseInt(newPoints);
+if (!points || points <= 0) return;
+
+try {
+showInfo('データを更新中...');
+await FirebaseDB.updateEquipment(id, newName.trim(), points);
+await loadEquipmentData();
+performSearch(elements.searchInput.value);
+showSuccess('データを更新しました');
+} catch (error) {
+console.error('編集エラー:', error);
+showError('データの更新に失敗しました');
+}
+}
+
+async function deleteItem(id, name) {
+if (!confirm(`"${name}" を削除しますか？`)) return;
+
+try {
+showInfo('データを削除中...');
+await FirebaseDB.deleteEquipment(id);
+await loadEquipmentData();
+performSearch(elements.searchInput.value);
+showSuccess('データを削除しました');
+} catch (error) {
+console.error('削除エラー:', error);
+showError('データの削除に失敗しました');
+}
+}
+
+// 計算機更新
 function updateCalculator() {
 const totalPoints = selectedItems.reduce((sum, item) => sum + (item.points * item.quantity), 0);
-totalPointsElement.textContent = `${totalPoints}点`;
+elements.totalPointsElement.textContent = `${totalPoints}点`;
 
 if (selectedItems.length === 0) {
-selectedItemsContainer.innerHTML = `
+elements.selectedItemsContainer.innerHTML = `
 <div class="empty-state">
 <p>選択された品目がここに表示されます</p>
 </div>
 `;
 } else {
-selectedItemsContainer.innerHTML = selectedItems.map(item => `
+elements.selectedItemsContainer.innerHTML = selectedItems.map(item => `
 <div class="selected-item">
 <div class="selected-item-info">
 <div class="selected-item-name">${item.name}</div>
 <div class="selected-item-points">${item.points}点/月 × ${item.quantity}個 = ${item.points * item.quantity}点</div>
 </div>
 <div class="quantity-controls">
-<button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)" ${item.quantity <= 1 ? 'disabled' : ''}>−</button>
+<button class="quantity-btn" onclick="updateQuantity('${item.id}', -1)" ${item.quantity <= 1 ? 'disabled' : ''}>−</button>
 <div class="quantity-display">${item.quantity}</div>
-<button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+<button class="quantity-btn" onclick="updateQuantity('${item.id}', 1)">+</button>
 </div>
-<button class="remove-btn" onclick="removeItem(${item.id})">×</button>
+<button class="remove-btn" onclick="removeItem('${item.id}')">×</button>
 </div>
 `).join('');
 }
@@ -743,43 +1058,72 @@ selectedItemsContainer.innerHTML = selectedItems.map(item => `
 
 function updateMobileCount() {
 const totalItems = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
-mobileCountSpan.textContent = totalItems;
+elements.mobileCountSpan.textContent = totalItems;
 }
 
-clearAllBtn.addEventListener('click', () => {
+// 全削除
+elements.clearAllBtn.addEventListener('click', () => {
 selectedItems = [];
 updateCalculator();
 updateMobileCount();
-saveData(welfareEquipment, selectedItems);
+saveSelectedItems();
 displaySearchResults(filteredItems);
 });
 
-// モバイル用の計算機表示切り替え
-toggleCalculatorBtn.addEventListener('click', () => {
-calculator.classList.add('show');
-closeCalculatorBtn.style.display = 'block';
+// モバイル表示切り替え
+elements.toggleCalculatorBtn.addEventListener('click', () => {
+elements.calculator.classList.add('show');
+elements.closeCalculatorBtn.style.display = 'block';
 });
 
-closeCalculatorBtn.addEventListener('click', () => {
-calculator.classList.remove('show');
-closeCalculatorBtn.style.display = 'none';
+elements.closeCalculatorBtn.addEventListener('click', () => {
+elements.calculator.classList.remove('show');
+elements.closeCalculatorBtn.style.display = 'none';
 });
+
+// 状態表示関数
+function showEmptySearchState() {
+elements.searchResults.innerHTML = `
+<div class="empty-state">
+<h3>福祉用具を検索してください</h3>
+<p>品目名を入力すると検索結果が表示されます</p>
+</div>
+`;
+}
+
+function showNoDataState() {
+elements.searchResults.innerHTML = `
+<div class="empty-state">
+<h3>データがありません</h3>
+<p>管理者モードでデータを追加してください</p>
+</div>
+`;
+}
+
+function showInfo(message) {
+elements.adminStatus.innerHTML = `<div class="status-message status-info">${message}</div>`;
+setTimeout(clearStatus, 3000);
+}
+
+function showSuccess(message) {
+elements.adminStatus.innerHTML = `<div class="status-message status-success">${message}</div>`;
+setTimeout(clearStatus, 5000);
+}
+
+function showError(message) {
+elements.adminStatus.innerHTML = `<div class="status-message status-error">${message}</div>`;
+setTimeout(clearStatus, 8000);
+}
+
+function clearStatus() {
+elements.adminStatus.innerHTML = '';
+}
 
 // アプリケーション初期化
-initializeApp();
-
-// PWA用のサービスワーカー登録
-if ('serviceWorker' in navigator) {
 window.addEventListener('load', () => {
-navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4gewogIGV2ZW50LndhaXRVbnRpbChzZWxmLnNraXBXYWl0aW5nKCkpOwp9KTsKCnNlbGYuYWRkRXZlbnRMaXN0ZW5lcignZmV0Y2gnLCBldmVudCA9PiB7CiAgZXZlbnQucmVzcG9uZFdpdGgoZmV0Y2goZXZlbnQucmVxdWVzdCkpOwp9KTs=')
-.then((registration) => {
-console.log('SW registered: ', registration);
-})
-.catch((registrationError) => {
-console.log('SW registration failed: ', registrationError);
+// Firebase が読み込まれるまで少し待つ
+setTimeout(initializeApp, 1000);
 });
-});
-}
 </script>
 </body>
 </html>
