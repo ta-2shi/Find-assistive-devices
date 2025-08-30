@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="福祉用具計算">
@@ -12,17 +12,17 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
-  import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+  import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
   
   // Firebase設定
-  const firebaseConfig = {
-    apiKey: "AIzaSyCsKv9UDALkSle0CJ4Ag8pxgisWDbdznnI",
-    authDomain: "find-assistive-devices-apps.firebaseapp.com",
-    projectId: "find-assistive-devices-apps",
-    storageBucket: "find-assistive-devices-apps.firebasestorage.app",
-    messagingSenderId: "474642604597",
-    appId: "1:474642604597:web:5b353b489bac360ba7477c"
-  };
+ const firebaseConfig = {
+  apiKey: "AIzaSyCsKv9UDALkSle0CJ4Ag8pxgisWDbdznnI",
+  authDomain: "find-assistive-devices-apps.firebaseapp.com",
+  projectId: "find-assistive-devices-apps",
+  storageBucket: "find-assistive-devices-apps.firebasestorage.app",
+  messagingSenderId: "474642604597",
+  appId: "1:474642604597:web:5b353b489bac360ba7477c"
+};
 
   // Firebase 初期化
   const app = initializeApp(firebaseConfig);
@@ -30,1491 +30,1215 @@
   
   // グローバルスコープに公開
   window.db = db;
-  window.firestore = { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch };
+  window.firestore = { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy };
 </script>
 
 <style>
-:root {
-  --primary-color: #2563eb;
-  --primary-dark: #1d4ed8;
-  --success-color: #10b981;
-  --danger-color: #ef4444;
-  --warning-color: #f59e0b;
-  --text-primary: #1e293b;
-  --text-secondary: #6b7280;
-  --bg-white: rgba(255, 255, 255, 0.95);
-  --safe-area-top: env(safe-area-inset-top, 0);
-  --safe-area-bottom: env(safe-area-inset-bottom, 0);
-}
-
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+margin: 0;
+padding: 0;
+box-sizing: border-box;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
-  padding-top: var(--safe-area-top);
-  padding-bottom: var(--safe-area-bottom);
-  overflow-x: hidden;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+min-height: 100vh;
+padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
 }
 
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 12px;
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
-  display: flex;
-  flex-direction: column;
+max-width: 1200px;
+margin: 0 auto;
+padding: 20px;
+min-height: 100vh;
+display: flex;
+flex-direction: column;
 }
 
-/* ヘッダー */
 .header {
-  background: var(--bg-white);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+background: rgba(255, 255, 255, 0.95);
+backdrop-filter: blur(10px);
+border-radius: 16px;
+padding: 20px;
+margin-bottom: 20px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 12px;
-  text-align: center;
+font-size: 24px;
+font-weight: 700;
+color: #1e293b;
+margin-bottom: 16px;
+text-align: center;
 }
 
-/* モード切り替え */
 .mode-toggle {
-  display: flex;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 10px;
-  padding: 3px;
-  margin-bottom: 12px;
+display: flex;
+gap: 8px;
+margin-bottom: 20px;
+background: rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+padding: 4px;
 }
 
 .mode-btn {
-  flex: 1;
-  background: transparent;
-  color: var(--text-secondary);
-  border: none;
-  padding: 10px 12px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 13px;
-  transition: all 0.2s ease;
-  touch-action: manipulation;
+flex: 1;
+background: transparent;
+color: rgba(255, 255, 255, 0.7);
+border: none;
+padding: 12px 16px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+transition: all 0.3s ease;
 }
 
 .mode-btn.active {
-  background: white;
-  color: var(--text-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+background: rgba(255, 255, 255, 0.9);
+color: #1e293b;
 }
 
-/* 検索入力 */
 .search-container {
-  position: relative;
-  margin-bottom: 12px;
-}
-
-.search-wrapper {
-  position: relative;
-}
-
-.search-icon {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
-  pointer-events: none;
+position: relative;
+margin-bottom: 20px;
 }
 
 .search-input {
-  width: 100%;
-  padding: 14px 44px 14px 44px;
-  border: none;
-  border-radius: 12px;
-  background: white;
-  font-size: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease;
+width: 100%;
+padding: 16px 20px;
+border: none;
+border-radius: 12px;
+background: rgba(255, 255, 255, 0.9);
+font-size: 16px;
+box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+transition: all 0.3s ease;
 }
 
-.search-input:focus {
-  outline: none;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
-}
-
-.clear-search {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--text-secondary);
-  color: white;
-  border: none;
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  touch-action: manipulation;
-}
-
-.clear-search.show {
-  display: flex;
-}
-
-/* 管理者パネル */
 .admin-panel {
-  display: none;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-  border: 2px dashed rgba(255, 255, 255, 0.3);
+display: none;
+background: rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+padding: 20px;
+margin-bottom: 20px;
+border: 2px dashed rgba(255, 255, 255, 0.3);
 }
 
 .admin-panel.active {
-  display: block;
+display: block;
+}
+
+.upload-section {
+margin-bottom: 20px;
 }
 
 .file-upload-container {
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-  text-align: center;
-  margin-bottom: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+padding: 20px;
+background: rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+border: 2px dashed rgba(255, 255, 255, 0.3);
+text-align: center;
+transition: all 0.3s ease;
+margin-bottom: 20px;
 }
 
-.file-upload-container:hover,
-.file-upload-container.drag-over {
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.15);
+.file-upload-container:hover {
+border-color: rgba(255, 255, 255, 0.5);
+background: rgba(255, 255, 255, 0.15);
 }
 
 .file-input {
-  display: none;
+display: none;
 }
 
 .file-upload-btn {
-  background: linear-gradient(45deg, var(--success-color), #059669);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  margin-bottom: 8px;
-  touch-action: manipulation;
+background: linear-gradient(45deg, #10b981, #059669);
+color: white;
+border: none;
+padding: 12px 24px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+margin-bottom: 8px;
 }
 
 .file-upload-text {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
-  margin-top: 8px;
+color: rgba(255, 255, 255, 0.8);
+font-size: 14px;
 }
 
 .manual-add {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+display: grid;
+grid-template-columns: 2fr 1fr auto;
+gap: 12px;
+align-items: end;
 }
 
 .input-group {
-  display: flex;
-  flex-direction: column;
+display: flex;
+flex-direction: column;
 }
 
 .input-label {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 6px;
+color: rgba(255, 255, 255, 0.9);
+font-size: 14px;
+font-weight: 600;
+margin-bottom: 6px;
 }
 
 .manual-input {
-  padding: 12px 16px;
-  border: none;
-  border-radius: 8px;
-  background: white;
-  font-size: 15px;
+padding: 12px 16px;
+border: none;
+border-radius: 8px;
+background: rgba(255, 255, 255, 0.9);
+font-size: 14px;
 }
 
 .add-manual-btn {
-  background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  width: 100%;
-  touch-action: manipulation;
+background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+color: white;
+border: none;
+padding: 12px 20px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+height: fit-content;
 }
 
-/* ステータスメッセージ */
 .status-message {
-  margin-top: 12px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+margin-top: 12px;
+padding: 8px 16px;
+border-radius: 6px;
+font-size: 14px;
+font-weight: 600;
 }
 
 .status-success {
-  background: #dcfce7;
-  color: #166534;
+background: #dcfce7;
+color: #166534;
 }
 
 .status-error {
-  background: #fecaca;
-  color: #991b1b;
+background: #fecaca;
+color: #991b1b;
 }
 
 .status-info {
-  background: #dbeafe;
-  color: #1e40af;
+background: #dbeafe;
+color: #1e40af;
 }
 
-/* メインコンテンツ */
+.search-input:focus, .manual-input:focus {
+outline: none;
+box-shadow: 0 4px 24px rgba(37, 99, 235, 0.2);
+transform: translateY(-2px);
+}
+
 .main-content {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  gap: 12px;
+display: grid;
+grid-template-columns: 1fr;
+gap: 20px;
+flex: 1;
 }
 
-/* 検索結果 */
+@media (min-width: 768px) {
+.main-content {
+grid-template-columns: 1fr 400px;
+}
+
+.manual-add {
+grid-template-columns: 2fr 1fr auto;
+}
+}
+
+@media (max-width: 500px) {
+.manual-add {
+grid-template-columns: 1fr;
+gap: 8px;
+}
+}
+
 .search-results {
-  background: var(--bg-white);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  min-height: calc(100vh - 250px);
+background: rgba(255, 255, 255, 0.95);
+backdrop-filter: blur(10px);
+border-radius: 16px;
+padding: 20px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+max-height: 600px;
+overflow-y: auto;
 }
 
 .result-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px;
-  background: white;
-  border-radius: 12px;
-  margin-bottom: 10px;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 16px;
+background: rgba(255, 255, 255, 0.7);
+border-radius: 12px;
+margin-bottom: 12px;
+transition: all 0.3s ease;
 }
 
-.result-item:active {
-  transform: scale(0.98);
+.result-item:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .item-info {
-  flex: 1;
-  min-width: 0;
+flex: 1;
 }
 
 .item-name {
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-  font-size: 15px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+font-weight: 600;
+color: #1e293b;
+margin-bottom: 4px;
 }
 
 .item-points {
-  color: var(--text-secondary);
-  font-size: 13px;
+color: #6b7280;
+font-size: 14px;
 }
 
 .item-actions {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-shrink: 0;
+display: flex;
+gap: 8px;
+align-items: center;
 }
 
 .add-btn, .edit-btn, .delete-btn {
-  border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 12px;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  touch-action: manipulation;
+border: none;
+padding: 8px 16px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+transition: all 0.3s ease;
+font-size: 12px;
 }
 
 .add-btn {
-  background: linear-gradient(45deg, var(--success-color), #059669);
-  color: white;
+background: linear-gradient(45deg, #10b981, #059669);
+color: white;
 }
 
-.add-btn:active {
-  transform: scale(0.95);
+.add-btn:hover {
+transform: scale(1.05);
 }
 
-.add-btn.added {
-  background: linear-gradient(45deg, #6b7280, #4b5563);
+.add-btn:disabled {
+background: #d1d5db;
+cursor: not-allowed;
+transform: none;
 }
 
 .edit-btn {
-  background: linear-gradient(45deg, var(--warning-color), #d97706);
-  color: white;
-  padding: 6px 10px;
+background: linear-gradient(45deg, #f59e0b, #d97706);
+color: white;
 }
 
 .delete-btn {
-  background: linear-gradient(45deg, var(--danger-color), #dc2626);
-  color: white;
-  padding: 6px 10px;
-}
-
-/* 計算機 */
-.mobile-toggle {
-  display: block;
-  background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
-  color: white;
-  border: none;
-  padding: 14px 20px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 15px;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
-  position: sticky;
-  top: 10px;
-  z-index: 10;
-  touch-action: manipulation;
-}
-
-.mobile-toggle:active {
-  transform: scale(0.98);
-}
-
-.mobile-count {
-  background: white;
-  color: var(--primary-color);
-  padding: 2px 8px;
-  border-radius: 12px;
-  margin-left: 8px;
-  font-weight: 700;
+background: linear-gradient(45deg, #ef4444, #dc2626);
+color: white;
 }
 
 .calculator {
-  display: none;
-}
-
-.calculator.show {
-  display: flex;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--bg-white);
-  z-index: 100;
-  flex-direction: column;
-  padding: var(--safe-area-top) 16px var(--safe-area-bottom) 16px;
-  animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-.calculator-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+background: rgba(255, 255, 255, 0.95);
+backdrop-filter: blur(10px);
+border-radius: 16px;
+padding: 20px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+position: sticky;
+top: 20px;
+max-height: 80vh;
+display: flex;
+flex-direction: column;
 }
 
 .calculator-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 12px;
+font-size: 20px;
+font-weight: 700;
+color: #1e293b;
+margin-bottom: 16px;
+display: flex;
+justify-content: space-between;
+align-items: center;
 }
 
 .total-points {
-  background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
-  color: white;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 15px;
-}
-
-.close-btn {
-  background: var(--text-secondary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  touch-action: manipulation;
+background: linear-gradient(45deg, #2563eb, #1d4ed8);
+color: white;
+padding: 4px 12px;
+border-radius: 20px;
+font-size: 16px;
 }
 
 .selected-items {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  margin-bottom: 16px;
+flex: 1;
+overflow-y: auto;
+margin-bottom: 16px;
 }
 
 .selected-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px;
-  background: white;
-  border-radius: 12px;
-  margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 12px;
+background: rgba(255, 255, 255, 0.7);
+border-radius: 8px;
+margin-bottom: 8px;
 }
 
 .selected-item-info {
-  flex: 1;
-  min-width: 0;
+flex: 1;
 }
 
 .selected-item-name {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 14px;
-  margin-bottom: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+font-weight: 600;
+color: #1e293b;
+font-size: 14px;
+margin-bottom: 2px;
 }
 
 .selected-item-points {
-  color: var(--text-secondary);
-  font-size: 12px;
+color: #6b7280;
+font-size: 12px;
 }
 
 .quantity-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-right: 8px;
+display: flex;
+align-items: center;
+gap: 8px;
+margin-right: 8px;
 }
 
 .quantity-btn {
-  background: #e5e7eb;
-  color: #374151;
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  font-weight: bold;
-  transition: all 0.2s ease;
-  touch-action: manipulation;
+background: #e5e7eb;
+color: #374151;
+border: none;
+width: 24px;
+height: 24px;
+border-radius: 4px;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 12px;
+font-weight: bold;
+transition: all 0.2s ease;
 }
 
-.quantity-btn:active:not(:disabled) {
-  transform: scale(0.9);
+.quantity-btn:hover {
+background: #d1d5db;
 }
 
 .quantity-btn:disabled {
-  background: #f3f4f6;
-  color: #9ca3af;
-  cursor: not-allowed;
+background: #f3f4f6;
+color: #9ca3af;
+cursor: not-allowed;
 }
 
 .quantity-display {
-  background: #f8fafc;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  min-width: 30px;
-  text-align: center;
+background: #f8fafc;
+padding: 2px 8px;
+border-radius: 4px;
+font-size: 12px;
+font-weight: 600;
+color: #1e293b;
+min-width: 20px;
+text-align: center;
 }
 
 .remove-btn {
-  background: var(--danger-color);
-  color: white;
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  transition: all 0.2s ease;
-  touch-action: manipulation;
+background: #ef4444;
+color: white;
+border: none;
+width: 24px;
+height: 24px;
+border-radius: 50%;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 12px;
+transition: all 0.3s ease;
 }
 
-.remove-btn:active {
-  transform: scale(0.9);
+.remove-btn:hover {
+transform: scale(1.1);
 }
 
 .clear-btn {
-  width: 100%;
-  background: var(--text-secondary);
-  color: white;
-  border: none;
-  padding: 14px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 15px;
-  transition: all 0.2s ease;
-  touch-action: manipulation;
+width: 100%;
+background: #6b7280;
+color: white;
+border: none;
+padding: 12px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+transition: all 0.3s ease;
 }
 
-.clear-btn:active {
-  transform: scale(0.98);
+.clear-btn:hover {
+background: #4b5563;
 }
 
-/* 空状態 */
 .empty-state {
-  text-align: center;
-  padding: 40px 20px;
+text-align: center;
+color: #6b7280;
+padding: 40px 20px;
 }
 
-.empty-state h3 {
-  color: var(--text-primary);
-  font-size: 16px;
-  margin-bottom: 8px;
+.mobile-toggle {
+display: none;
+background: linear-gradient(45deg, #2563eb, #1d4ed8);
+color: white;
+border: none;
+padding: 12px 24px;
+border-radius: 12px;
+cursor: pointer;
+font-weight: 600;
+margin-bottom: 20px;
+position: sticky;
+top: 0;
+z-index: 10;
 }
 
-.empty-state p {
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-/* ローディング */
 .loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 40px;
-  color: var(--text-secondary);
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+padding: 20px;
+color: #6b7280;
 }
 
 .spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid #e5e7eb;
-  border-top: 3px solid var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+width: 20px;
+height: 20px;
+border: 2px solid #e5e7eb;
+border-top: 2px solid #6b7280;
+border-radius: 50%;
+animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
 }
 
-/* デスクトップ向け調整 */
-@media (min-width: 768px) {
+/* 既存のCSSに追加または置き換えた部分 */
+
+/* モバイル用のレスポンシブ調整 */
+@media (max-width: 767px) {
   .container {
-    padding: 20px;
+    padding: 8px;
+    gap: 8px;
   }
 
   .header {
-    padding: 24px;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
+    padding: 12px;
   }
 
   .title {
-    font-size: 28px;
-    margin-bottom: 20px;
+    font-size: 18px;
+    margin-bottom: 8px;
   }
 
-  .main-content {
-    flex-direction: row;
-    gap: 20px;
+  /* モードボタンをコンパクトに */
+  .mode-toggle {
+    margin-bottom: 8px;
+    padding: 2px;
   }
 
+  .mode-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .search-container {
+    margin-bottom: 8px;
+    margin-top: -4px; /* 検索窓をさらに上に */
+  }
+
+  .search-input {
+    padding: 12px 16px;
+    font-size: 16px; /* iOSズーム防止 */
+  }
+
+  /* 検索結果の表示領域をさらに拡張 */
   .search-results {
-    flex: 1;
+    min-height: calc(100vh - 220px); /* ヘッダーを縮小した分拡張 */
     max-height: calc(100vh - 220px);
+    padding: 15px;
+  }
+
+  /* メイン コンテンツ の高さ調整 */
+  .main-content {
+    flex: 1;
+    height: calc(100vh - 210px);
   }
 
   .mobile-toggle {
-    display: none;
+    display: block;
+    margin-bottom: 10px;
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
 
   .calculator {
-    display: flex;
-    position: sticky;
-    top: 20px;
-    width: 400px;
-    background: var(--bg-white);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
     padding: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    max-height: calc(100vh - 40px);
-    animation: none;
+    padding-top: env(safe-area-inset-top, 20px);
+    padding-bottom: env(safe-area-inset-bottom, 20px);
   }
 
   .calculator.show {
-    position: sticky;
+    display: flex;
   }
 
   .close-btn {
-    display: none;
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  /* 検索結果のアイテム表示を最適化 */
+  .result-item {
+    margin-bottom: 8px;
+    padding: 12px;
+  }
+
+  .item-actions {
+    flex-direction: column;
+    gap: 4px;
+    min-width: 80px;
+  }
+
+  .add-btn, .edit-btn, .delete-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .item-name {
+    font-size: 14px;
+  }
+
+  .item-points {
+    font-size: 12px;
+  }
+
+  /* iOS Safari の viewport 問題に対応 */
+  .container {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+
+  /* 管理者パネルもコンパクトに */
+  .admin-panel {
+    padding: 12px;
+    margin-bottom: 8px;
   }
 
   .manual-add {
-    grid-template-columns: 2fr 1fr auto;
-    align-items: end;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .input-label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .manual-input {
+    padding: 10px 12px;
+    font-size: 14px;
   }
 
   .add-manual-btn {
-    width: auto;
-    height: fit-content;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  /* キーボードが出た時の対応 */
+  .search-input:focus + .main-content .search-results {
+    max-height: 50vh;
   }
 }
-
-/* アクセシビリティ */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* フォーカス表示 */
-button:focus-visible,
-input:focus-visible {
-  outline: 3px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-/* ダークモード対応 */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-white: rgba(30, 30, 30, 0.95);
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-  }
   
-  .search-input,
-  .manual-input,
-  .result-item,
-  .selected-item {
-    background: rgba(50, 50, 50, 0.9);
-    color: var(--text-primary);
-  }
-  
-  .mode-btn.active {
-    background: rgba(60, 60, 60, 0.9);
-  }
-}
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="header">
-    <h1 class="title">福祉用具点数計算アプリ</h1>
-    
-    <div class="mode-toggle" role="tablist">
-      <button class="mode-btn active" id="userMode" role="tab" aria-selected="true" aria-controls="search-panel">
-        利用者モード
-      </button>
-      <button class="mode-btn" id="adminMode" role="tab" aria-selected="false" aria-controls="admin-panel">
-        管理者モード
-      </button>
-    </div>
-    
-    <div class="admin-panel" id="adminPanel" role="tabpanel" aria-hidden="true">
-      <div class="upload-section">
-        <div class="file-upload-container" id="dropZone">
-          <input type="file" class="file-input" id="fileInput" accept=".xlsx,.xls" aria-label="Excelファイルを選択">
-          <button class="file-upload-btn" onclick="document.getElementById('fileInput').click()">
-            📁 Excelファイルをアップロード
-          </button>
-          <div class="file-upload-text">
-            ドラッグ&ドロップまたはクリックして選択<br>
-            (A列：商品名、B列：点数)
-          </div>
-        </div>
-        
-        <div class="manual-add">
-          <div class="input-group">
-            <label class="input-label" for="manualName">商品名</label>
-            <input type="text" class="manual-input" id="manualName" placeholder="例：車いす">
-          </div>
-          <div class="input-group">
-            <label class="input-label" for="manualPoints">点数/月</label>
-            <input type="number" class="manual-input" id="manualPoints" placeholder="例：400" min="1">
-          </div>
-          <button class="add-manual-btn" id="addManualBtn">➕ 手動追加</button>
-        </div>
-        
-        <div id="adminStatus" role="status" aria-live="polite"></div>
-      </div>
-    </div>
-    
-    <div class="search-container" id="search-panel" role="tabpanel">
-      <div class="search-wrapper">
-        <span class="search-icon">🔍</span>
-        <input 
-          type="search" 
-          class="search-input" 
-          id="searchInput" 
-          placeholder="福祉用具を検索..."
-          aria-label="福祉用具を検索"
-          autocomplete="off"
-        >
-        <button class="clear-search" id="clearSearchBtn" aria-label="検索をクリア">✕</button>
-      </div>
-    </div>
-  </div>
-  
-  <button class="mobile-toggle" id="toggleCalculator">
-    📊 計算結果を表示
-    <span class="mobile-count" id="mobileCount">0</span>
-  </button>
-  
-  <div class="main-content">
-    <div class="search-results" id="searchResults" role="region" aria-label="検索結果">
-      <div class="loading">
-        <div class="spinner"></div>
-        <span>データを読み込み中...</span>
-      </div>
-    </div>
-    
-    <div class="calculator" id="calculator" role="region" aria-label="選択した品目">
-      <div class="calculator-header">
-        <div class="calculator-title">
-          選択した品目
-          <span class="total-points" id="totalPoints">0点</span>
-        </div>
-        <button class="close-btn" id="closeCalculator">✕ 閉じる</button>
-      </div>
-      <div class="selected-items" id="selectedItems">
-        <div class="empty-state">
-          <h3>📦 品目が選択されていません</h3>
-          <p>左側のリストから品目を追加してください</p>
-        </div>
-      </div>
-      <button class="clear-btn" id="clearAll">🗑️ 全て削除</button>
-    </div>
-  </div>
+<div class="header">
+<h1 class="title">福祉用具点数計算アプリ</h1>
+
+<div class="mode-toggle">
+<button class="mode-btn active" id="userMode">利用者モード</button>
+<button class="mode-btn" id="adminMode">管理者モード</button>
+</div>
+
+<div class="admin-panel" id="adminPanel">
+<div class="upload-section">
+<div class="file-upload-container">
+<input type="file" class="file-input" id="fileInput" accept=".xlsx,.xls">
+<button class="file-upload-btn" onclick="document.getElementById('fileInput').click()">
+Excelファイルをアップロード
+</button>
+<div class="file-upload-text">
+福祉用具リスト（A列：商品名、B列：点数）
+</div>
+</div>
+
+<div class="manual-add">
+<div class="input-group">
+<label class="input-label">商品名</label>
+<input type="text" class="manual-input" id="manualName" placeholder="商品名を入力">
+</div>
+<div class="input-group">
+<label class="input-label">点数/月</label>
+<input type="number" class="manual-input" id="manualPoints" placeholder="点数">
+</div>
+<button class="add-manual-btn" id="addManualBtn">手動追加</button>
+</div>
+
+<div id="adminStatus"></div>
+</div>
+</div>
+
+<div class="search-container">
+<input type="text" class="search-input" id="searchInput" placeholder="福祉用具を検索...">
+</div>
+</div>
+
+<button class="mobile-toggle" id="toggleCalculator">
+計算結果を表示 (<span id="mobileCount">0</span>件)
+</button>
+
+<div class="main-content">
+<div class="search-results" id="searchResults">
+<div class="loading">
+<div class="spinner"></div>
+データを読み込み中...
+</div>
+</div>
+
+<div class="calculator" id="calculator">
+<button class="close-btn" id="closeCalculator" style="display: none;">× 閉じる</button>
+<div class="calculator-title">
+選択した品目
+<span class="total-points" id="totalPoints">0点</span>
+</div>
+<div class="selected-items" id="selectedItems">
+<div class="empty-state">
+<p>選択された品目がここに表示されます</p>
+</div>
+</div>
+<button class="clear-btn" id="clearAll">全て削除</button>
+</div>
+</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// アプリケーション状態管理
-const AppState = {
-  welfareEquipment: [],
-  selectedItems: [],
-  filteredItems: [],
-  isAdminMode: false,
-  searchQuery: '',
-  isLoading: false,
-  debounceTimer: null
-};
+// グローバル変数
+let welfareEquipment = [];
+let selectedItems = [];
+let filteredItems = [];
+let isAdminMode = false;
 
-// DOM要素のキャッシュ
-const DOM = {
-  init() {
-    this.userModeBtn = document.getElementById('userMode');
-    this.adminModeBtn = document.getElementById('adminMode');
-    this.adminPanel = document.getElementById('adminPanel');
-    this.fileInput = document.getElementById('fileInput');
-    this.dropZone = document.getElementById('dropZone');
-    this.manualName = document.getElementById('manualName');
-    this.manualPoints = document.getElementById('manualPoints');
-    this.addManualBtn = document.getElementById('addManualBtn');
-    this.adminStatus = document.getElementById('adminStatus');
-    this.searchInput = document.getElementById('searchInput');
-    this.clearSearchBtn = document.getElementById('clearSearchBtn');
-    this.searchResults = document.getElementById('searchResults');
-    this.selectedItemsContainer = document.getElementById('selectedItems');
-    this.totalPointsElement = document.getElementById('totalPoints');
-    this.clearAllBtn = document.getElementById('clearAll');
-    this.toggleCalculatorBtn = document.getElementById('toggleCalculator');
-    this.calculator = document.getElementById('calculator');
-    this.closeCalculatorBtn = document.getElementById('closeCalculator');
-    this.mobileCountSpan = document.getElementById('mobileCount');
-  }
+// DOM要素
+const elements = {
+userModeBtn: document.getElementById('userMode'),
+adminModeBtn: document.getElementById('adminMode'),
+adminPanel: document.getElementById('adminPanel'),
+fileInput: document.getElementById('fileInput'),
+manualName: document.getElementById('manualName'),
+manualPoints: document.getElementById('manualPoints'),
+addManualBtn: document.getElementById('addManualBtn'),
+adminStatus: document.getElementById('adminStatus'),
+searchInput: document.getElementById('searchInput'),
+searchResults: document.getElementById('searchResults'),
+selectedItemsContainer: document.getElementById('selectedItems'),
+totalPointsElement: document.getElementById('totalPoints'),
+clearAllBtn: document.getElementById('clearAll'),
+toggleCalculatorBtn: document.getElementById('toggleCalculator'),
+calculator: document.getElementById('calculator'),
+closeCalculatorBtn: document.getElementById('closeCalculator'),
+mobileCountSpan: document.getElementById('mobileCount')
 };
 
 // Firebase データベース操作
 const FirebaseDB = {
-  async loadEquipment() {
-    try {
-      const q = window.firestore.query(
-        window.firestore.collection(window.db, 'welfare_equipment'),
-        window.firestore.orderBy('name')
-      );
-      const querySnapshot = await window.firestore.getDocs(q);
-      const equipment = [];
-      querySnapshot.forEach((doc) => {
-        equipment.push({
-          id: doc.id,
-          ...doc.data()
-        });
-      });
-      return equipment;
-    } catch (error) {
-      console.error('データ読み込みエラー:', error);
-      throw error;
-    }
-  },
+async loadEquipment() {
+try {
+const q = window.firestore.query(
+window.firestore.collection(window.db, 'welfare_equipment'),
+window.firestore.orderBy('name')
+);
+const querySnapshot = await window.firestore.getDocs(q);
+const equipment = [];
+querySnapshot.forEach((doc) => {
+equipment.push({
+id: doc.id,
+...doc.data()
+});
+});
+return equipment;
+} catch (error) {
+console.error('データ読み込みエラー:', error);
+throw error;
+}
+},
 
-  async addEquipment(name, points) {
-    try {
-      const docRef = await window.firestore.addDoc(
-        window.firestore.collection(window.db, 'welfare_equipment'),
-        {
-          name: name.trim(),
-          points: parseInt(points),
-          createdAt: new Date()
-        }
-      );
-      return docRef.id;
-    } catch (error) {
-      console.error('データ追加エラー:', error);
-      throw error;
-    }
-  },
+async addEquipment(name, points) {
+try {
+const docRef = await window.firestore.addDoc(
+window.firestore.collection(window.db, 'welfare_equipment'),
+{
+name: name.trim(),
+points: parseInt(points),
+createdAt: new Date()
+}
+);
+return docRef.id;
+} catch (error) {
+console.error('データ追加エラー:', error);
+throw error;
+}
+},
 
-  async addBatchEquipment(items) {
-    try {
-      const batch = window.firestore.writeBatch(window.db);
-      const collectionRef = window.firestore.collection(window.db, 'welfare_equipment');
-      
-      items.forEach(item => {
-        const docRef = window.firestore.doc(collectionRef);
-        batch.set(docRef, {
-          name: item.name,
-          points: item.points,
-          createdAt: new Date()
-        });
-      });
-      
-      await batch.commit();
-      return items.length;
-    } catch (error) {
-      console.error('バッチ追加エラー:', error);
-      throw error;
-    }
-  },
+async updateEquipment(id, name, points) {
+try {
+await window.firestore.updateDoc(
+window.firestore.doc(window.db, 'welfare_equipment', id),
+{
+name: name.trim(),
+points: parseInt(points),
+updatedAt: new Date()
+}
+);
+} catch (error) {
+console.error('データ更新エラー:', error);
+throw error;
+}
+},
 
-  async updateEquipment(id, name, points) {
-    try {
-      await window.firestore.updateDoc(
-        window.firestore.doc(window.db, 'welfare_equipment', id),
-        {
-          name: name.trim(),
-          points: parseInt(points),
-          updatedAt: new Date()
-        }
-      );
-    } catch (error) {
-      console.error('データ更新エラー:', error);
-      throw error;
-    }
-  },
-
-  async deleteEquipment(id) {
-    try {
-      await window.firestore.deleteDoc(
-        window.firestore.doc(window.db, 'welfare_equipment', id)
-      );
-    } catch (error) {
-      console.error('データ削除エラー:', error);
-      throw error;
-    }
-  }
+async deleteEquipment(id) {
+try {
+await window.firestore.deleteDoc(
+window.firestore.doc(window.db, 'welfare_equipment', id)
+);
+} catch (error) {
+console.error('データ削除エラー:', error);
+throw error;
+}
+}
 };
 
-// ユーティリティ関数
-const Utils = {
-  debounce(func, wait) {
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(AppState.debounceTimer);
-        func(...args);
-      };
-      clearTimeout(AppState.debounceTimer);
-      AppState.debounceTimer = setTimeout(later, wait);
-    };
-  },
-
-  formatNumber(num) {
-    return num.toLocaleString('ja-JP');
-  },
-
-  showMessage(message, type = 'info') {
-    const statusElement = DOM.adminStatus;
-    statusElement.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
-    
-    const duration = type === 'error' ? 8000 : type === 'success' ? 5000 : 3000;
-    setTimeout(() => {
-      statusElement.innerHTML = '';
-    }, duration);
-  },
-
-  saveToStorage(key, data) {
-    try {
-      sessionStorage.setItem(key, JSON.stringify(data));
-    } catch (error) {
-      console.error('ストレージ保存エラー:', error);
-    }
-  },
-
-  loadFromStorage(key) {
-    try {
-      const data = sessionStorage.getItem(key);
-      return data ? JSON.parse(data) : null;
-    } catch (error) {
-      console.error('ストレージ読み込みエラー:', error);
-      return null;
-    }
-  }
-};
-
-// UI管理
-const UI = {
-  updateSearchResults(items) {
-    if (items.length === 0) {
-      DOM.searchResults.innerHTML = `
-        <div class="empty-state">
-          <h3>🔍 該当する品目が見つかりません</h3>
-          <p>別のキーワードで検索してみてください</p>
-        </div>
-      `;
-      return;
-    }
-
-    const html = items.map(item => {
-      const selectedItem = AppState.selectedItems.find(s => s.id === item.id);
-      const isSelected = !!selectedItem;
-      const quantity = selectedItem ? selectedItem.quantity : 0;
-
-      const adminButtons = AppState.isAdminMode ? `
-        <button class="edit-btn" onclick="App.editItem('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.points})" aria-label="編集">
-          ✏️
-        </button>
-        <button class="delete-btn" onclick="App.deleteItem('${item.id}', '${item.name.replace(/'/g, "\\'")}') aria-label="削除">
-          🗑️
-        </button>
-      ` : '';
-
-      return `
-        <div class="result-item">
-          <div class="item-info">
-            <div class="item-name">${item.name}</div>
-            <div class="item-points">${Utils.formatNumber(item.points)}点/月</div>
-          </div>
-          <div class="item-actions">
-            <button 
-              class="add-btn ${isSelected ? 'added' : ''}" 
-              onclick="App.addItem('${item.id}')"
-              aria-label="${isSelected ? `追加済み (${quantity}個)` : '追加'}"
-            >
-              ${isSelected ? `✓ ${quantity}個` : '＋ 追加'}
-            </button>
-            ${adminButtons}
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    DOM.searchResults.innerHTML = html;
-  },
-
-  updateCalculator() {
-    const totalPoints = AppState.selectedItems.reduce((sum, item) => 
-      sum + (item.points * item.quantity), 0
-    );
-    
-    DOM.totalPointsElement.textContent = `${Utils.formatNumber(totalPoints)}点`;
-
-    if (AppState.selectedItems.length === 0) {
-      DOM.selectedItemsContainer.innerHTML = `
-        <div class="empty-state">
-          <h3>📦 品目が選択されていません</h3>
-          <p>左側のリストから品目を追加してください</p>
-        </div>
-      `;
-    } else {
-      const html = AppState.selectedItems.map(item => `
-        <div class="selected-item">
-          <div class="selected-item-info">
-            <div class="selected-item-name">${item.name}</div>
-            <div class="selected-item-points">
-              ${Utils.formatNumber(item.points)}点 × ${item.quantity} = ${Utils.formatNumber(item.points * item.quantity)}点
-            </div>
-          </div>
-          <div class="quantity-controls">
-            <button 
-              class="quantity-btn" 
-              onclick="App.updateQuantity('${item.id}', -1)" 
-              ${item.quantity <= 1 ? 'disabled' : ''}
-              aria-label="数量を減らす"
-            >
-              －
-            </button>
-            <div class="quantity-display">${item.quantity}</div>
-            <button 
-              class="quantity-btn" 
-              onclick="App.updateQuantity('${item.id}', 1)"
-              aria-label="数量を増やす"
-            >
-              ＋
-            </button>
-          </div>
-          <button 
-            class="remove-btn" 
-            onclick="App.removeItem('${item.id}')"
-            aria-label="削除"
-          >
-            ✕
-          </button>
-        </div>
-      `).join('');
-
-      DOM.selectedItemsContainer.innerHTML = html;
-    }
-
-    this.updateMobileCount();
-  },
-
-  updateMobileCount() {
-    const totalItems = AppState.selectedItems.reduce((sum, item) => sum + item.quantity, 0);
-    DOM.mobileCountSpan.textContent = totalItems;
-  },
-
-  showEmptySearchState() {
-    DOM.searchResults.innerHTML = `
-      <div class="empty-state">
-        <h3>🔎 福祉用具を検索してください</h3>
-        <p>品目名を入力すると検索結果が表示されます</p>
-      </div>
-    `;
-  },
-
-  showLoadingState() {
-    DOM.searchResults.innerHTML = `
-      <div class="loading">
-        <div class="spinner"></div>
-        <span>データを読み込み中...</span>
-      </div>
-    `;
-  }
-};
-
-// メインアプリケーション
-const App = {
-  async init() {
-    DOM.init();
-    this.attachEventListeners();
-    
-    try {
-      UI.showLoadingState();
-      await this.loadEquipmentData();
-      this.loadSelectedItems();
-      UI.showEmptySearchState();
-    } catch (error) {
-      Utils.showMessage('データベース接続エラーが発生しました。ページを再読み込みしてください。', 'error');
-    }
-  },
-
-  attachEventListeners() {
-    // モード切り替え
-    DOM.userModeBtn.addEventListener('click', () => this.switchMode(false));
-    DOM.adminModeBtn.addEventListener('click', () => this.switchMode(true));
-
-    // 検索
-    const debouncedSearch = Utils.debounce((query) => this.performSearch(query), 300);
-    DOM.searchInput.addEventListener('input', (e) => {
-      AppState.searchQuery = e.target.value.trim();
-      DOM.clearSearchBtn.classList.toggle('show', AppState.searchQuery.length > 0);
-      
-      if (AppState.searchQuery === '') {
-        UI.showEmptySearchState();
-      } else {
-        debouncedSearch(AppState.searchQuery);
-      }
-    });
-
-    // 検索クリア
-    DOM.clearSearchBtn.addEventListener('click', () => {
-      DOM.searchInput.value = '';
-      AppState.searchQuery = '';
-      DOM.clearSearchBtn.classList.remove('show');
-      UI.showEmptySearchState();
-    });
-
-    // ファイルアップロード
-    DOM.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
-
-    // ドラッグ&ドロップ
-    DOM.dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      DOM.dropZone.classList.add('drag-over');
-    });
-
-    DOM.dropZone.addEventListener('dragleave', () => {
-      DOM.dropZone.classList.remove('drag-over');
-    });
-
-    DOM.dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      DOM.dropZone.classList.remove('drag-over');
-      
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        DOM.fileInput.files = files;
-        this.handleFileUpload({ target: { files } });
-      }
-    });
-
-    // 手動追加
-    DOM.addManualBtn.addEventListener('click', () => this.handleManualAdd());
-    
-    // Enterキーで追加
-    DOM.manualName.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') DOM.manualPoints.focus();
-    });
-    
-    DOM.manualPoints.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') this.handleManualAdd();
-    });
-
-    // 計算機表示切り替え（モバイル）
-    DOM.toggleCalculatorBtn.addEventListener('click', () => {
-      DOM.calculator.classList.add('show');
-    });
-
-    DOM.closeCalculatorBtn.addEventListener('click', () => {
-      DOM.calculator.classList.remove('show');
-    });
-
-    // 全削除
-    DOM.clearAllBtn.addEventListener('click', () => {
-      if (AppState.selectedItems.length > 0 && confirm('選択した品目を全て削除しますか？')) {
-        AppState.selectedItems = [];
-        UI.updateCalculator();
-        this.saveSelectedItems();
-        this.performSearch(AppState.searchQuery);
-      }
-    });
-
-    // ウィンドウリサイズ対応
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        if (window.innerWidth >= 768) {
-          DOM.calculator.classList.remove('show');
-        }
-      }, 250);
-    });
-  },
-
-  async loadEquipmentData() {
-    try {
-      AppState.welfareEquipment = await FirebaseDB.loadEquipment();
-      AppState.filteredItems = AppState.welfareEquipment;
-      
-      if (AppState.welfareEquipment.length > 0) {
-        Utils.showMessage(`${AppState.welfareEquipment.length}件のデータを読み込みました`, 'info');
-      }
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  loadSelectedItems() {
-    const saved = Utils.loadFromStorage('selectedWelfareItems');
-    if (saved) {
-      AppState.selectedItems = saved;
-      UI.updateCalculator();
-    }
-  },
-
-  saveSelectedItems() {
-    Utils.saveToStorage('selectedWelfareItems', AppState.selectedItems);
-  },
-
-  switchMode(isAdmin) {
-    AppState.isAdminMode = isAdmin;
-    DOM.userModeBtn.classList.toggle('active', !isAdmin);
-    DOM.adminModeBtn.classList.toggle('active', isAdmin);
-    DOM.adminPanel.classList.toggle('active', isAdmin);
-    DOM.adminPanel.setAttribute('aria-hidden', !isAdmin);
-    DOM.userModeBtn.setAttribute('aria-selected', !isAdmin);
-    DOM.adminModeBtn.setAttribute('aria-selected', isAdmin);
-
-    if (AppState.searchQuery) {
-      this.performSearch(AppState.searchQuery);
-    }
-  },
-
-  performSearch(query) {
-    if (AppState.welfareEquipment.length === 0) {
-      DOM.searchResults.innerHTML = `
-        <div class="empty-state">
-          <h3>📋 データがありません</h3>
-          <p>管理者モードでデータを追加してください</p>
-        </div>
-      `;
-      return;
-    }
-
-    AppState.filteredItems = AppState.welfareEquipment.filter(item => 
-      item.name.toLowerCase().includes(query.toLowerCase())
-    );
-
-    UI.updateSearchResults(AppState.filteredItems);
-  },
-
-  async handleFileUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      Utils.showMessage('ファイルを読み込み中...', 'info');
-
-      const arrayBuffer = await file.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: ['name', 'points'], range: 1 });
-
-      const validData = data
-        .filter(row => row.name && row.points)
-        .map(row => ({
-          name: String(row.name).trim(),
-          points: parseInt(row.points) || 0
-        }))
-        .filter(item => item.name && item.points > 0);
-
-      if (validData.length === 0) {
-        throw new Error('有効なデータが見つかりませんでした');
-      }
-
-      Utils.showMessage(`${validData.length}件のデータを保存中...`, 'info');
-
-      // バッチ処理で高速化
-      const addedCount = await FirebaseDB.addBatchEquipment(validData);
-      
-      await this.loadEquipmentData();
-      Utils.showMessage(`${addedCount}件のデータを保存しました`, 'success');
-
-    } catch (error) {
-      console.error('ファイルアップロードエラー:', error);
-      Utils.showMessage(`エラー: ${error.message}`, 'error');
-    } finally {
-      DOM.fileInput.value = '';
-    }
-  },
-
-  async handleManualAdd() {
-    const name = DOM.manualName.value.trim();
-    const points = parseInt(DOM.manualPoints.value);
-
-    if (!name || !points || points <= 0) {
-      Utils.showMessage('商品名と有効な点数を入力してください', 'error');
-      return;
-    }
-
-    try {
-      Utils.showMessage('データを保存中...', 'info');
-      await FirebaseDB.addEquipment(name, points);
-      await this.loadEquipmentData();
-
-      DOM.manualName.value = '';
-      DOM.manualPoints.value = '';
-      Utils.showMessage(`"${name}" を追加しました`, 'success');
-
-      if (AppState.searchQuery) {
-        this.performSearch(AppState.searchQuery);
-      }
-
-    } catch (error) {
-      console.error('手動追加エラー:', error);
-      Utils.showMessage('データの追加に失敗しました', 'error');
-    }
-  },
-
-  addItem(itemId) {
-    const item = AppState.welfareEquipment.find(item => item.id === itemId);
-    if (!item) return;
-
-    const existingIndex = AppState.selectedItems.findIndex(selected => selected.id === itemId);
-    if (existingIndex !== -1) {
-      AppState.selectedItems[existingIndex].quantity += 1;
-    } else {
-      AppState.selectedItems.push({
-        ...item,
-        quantity: 1
-      });
-    }
-
-    UI.updateCalculator();
-    this.saveSelectedItems();
-    UI.updateSearchResults(AppState.filteredItems);
-  },
-
-  updateQuantity(itemId, change) {
-    const itemIndex = AppState.selectedItems.findIndex(item => item.id === itemId);
-    if (itemIndex === -1) return;
-
-    AppState.selectedItems[itemIndex].quantity = Math.max(1, 
-      AppState.selectedItems[itemIndex].quantity + change
-    );
-    
-    UI.updateCalculator();
-    this.saveSelectedItems();
-    UI.updateSearchResults(AppState.filteredItems);
-  },
-
-  removeItem(itemId) {
-    AppState.selectedItems = AppState.selectedItems.filter(item => item.id !== itemId);
-    UI.updateCalculator();
-    this.saveSelectedItems();
-    UI.updateSearchResults(AppState.filteredItems);
-  },
-
-  async editItem(id, currentName, currentPoints) {
-    const newName = prompt('商品名を編集:', currentName);
-    if (!newName || newName.trim() === '') return;
-
-    const newPoints = prompt('点数を編集:', currentPoints);
-    const points = parseInt(newPoints);
-    if (!points || points <= 0) return;
-
-    try {
-      Utils.showMessage('データを更新中...', 'info');
-      await FirebaseDB.updateEquipment(id, newName.trim(), points);
-      await this.loadEquipmentData();
-      
-      // 選択済みアイテムも更新
-      const selectedIndex = AppState.selectedItems.findIndex(item => item.id === id);
-      if (selectedIndex !== -1) {
-        AppState.selectedItems[selectedIndex].name = newName.trim();
-        AppState.selectedItems[selectedIndex].points = points;
-        UI.updateCalculator();
-        this.saveSelectedItems();
-      }
-      
-      this.performSearch(AppState.searchQuery);
-      Utils.showMessage('データを更新しました', 'success');
-    } catch (error) {
-      console.error('編集エラー:', error);
-      Utils.showMessage('データの更新に失敗しました', 'error');
-    }
-  },
-
-  async deleteItem(id, name) {
-    if (!confirm(`"${name}" を削除しますか？\nこの操作は取り消せません。`)) return;
-
-    try {
-      Utils.showMessage('データを削除中...', 'info');
-      await FirebaseDB.deleteEquipment(id);
-      await this.loadEquipmentData();
-      
-      // 選択済みアイテムからも削除
-      AppState.selectedItems = AppState.selectedItems.filter(item => item.id !== id);
-      UI.updateCalculator();
-      this.saveSelectedItems();
-      
-      this.performSearch(AppState.searchQuery);
-      Utils.showMessage('データを削除しました', 'success');
-    } catch (error) {
-      console.error('削除エラー:', error);
-      Utils.showMessage('データの削除に失敗しました', 'error');
-    }
-  }
-};
-
-// グローバル関数（HTML内のonclickから呼び出すため）
-window.App = App;
-
-// アプリケーション起動
-window.addEventListener('DOMContentLoaded', () => {
-  // Firebase の初期化を待つ
-  setTimeout(() => {
-    App.init().catch(error => {
-      console.error('アプリケーション初期化エラー:', error);
-      Utils.showMessage('アプリケーションの起動に失敗しました。ページを再読み込みしてください。', 'error');
-    });
-  }, 1000);
+// 初期化
+async function initializeApp() {
+try {
+await loadEquipmentData();
+showEmptySearchState();
+loadSelectedItems();
+} catch (error) {
+showError('データベース接続エラーが発生しました。');
+}
+}
+
+// 福祉用具データの読み込み
+async function loadEquipmentData() {
+try {
+welfareEquipment = await FirebaseDB.loadEquipment();
+filteredItems = welfareEquipment;
+showInfo(`${welfareEquipment.length}件のデータを読み込みました`);
+} catch (error) {
+throw error;
+}
+}
+
+// 選択済みアイテムの読み込み
+function loadSelectedItems() {
+try {
+const saved = sessionStorage.getItem('selectedWelfareItems');
+if (saved) {
+selectedItems = JSON.parse(saved);
+updateCalculator();
+updateMobileCount();
+}
+} catch (error) {
+selectedItems = [];
+}
+}
+
+// 選択済みアイテムの保存
+function saveSelectedItems() {
+try {
+sessionStorage.setItem('selectedWelfareItems', JSON.stringify(selectedItems));
+} catch (error) {
+console.error('選択アイテム保存エラー:', error);
+}
+}
+
+// モード切り替え
+elements.userModeBtn.addEventListener('click', () => switchMode(false));
+elements.adminModeBtn.addEventListener('click', () => switchMode(true));
+
+function switchMode(admin) {
+isAdminMode = admin;
+elements.userModeBtn.classList.toggle('active', !admin);
+elements.adminModeBtn.classList.toggle('active', admin);
+elements.adminPanel.classList.toggle('active', admin);
+
+// 検索結果を更新
+if (elements.searchInput.value.trim()) {
+performSearch(elements.searchInput.value);
+} else {
+showEmptySearchState();
+}
+}
+
+// Excel ファイルアップロード
+elements.fileInput.addEventListener('change', handleFileUpload);
+
+async function handleFileUpload(e) {
+const file = e.target.files[0];
+if (!file) return;
+
+try {
+showInfo('ファイルを読み込み中...');
+
+const arrayBuffer = await file.arrayBuffer();
+const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+const firstSheetName = workbook.SheetNames[0];
+const worksheet = workbook.Sheets[firstSheetName];
+const data = XLSX.utils.sheet_to_json(worksheet, { header: ['name', 'points'], range: 1 });
+
+const validData = data
+.filter(row => row.name && row.points)
+.map(row => ({
+name: String(row.name).trim(),
+points: parseInt(row.points) || 0
+}))
+.filter(item => item.name && item.points > 0);
+
+if (validData.length === 0) {
+throw new Error('有効なデータが見つかりませんでした');
+}
+
+showInfo(`${validData.length}件のデータをデータベースに保存中...`);
+
+// Firebase に保存
+let addedCount = 0;
+for (const item of validData) {
+try {
+await FirebaseDB.addEquipment(item.name, item.points);
+addedCount++;
+} catch (error) {
+console.error(`"${item.name}" の保存に失敗:`, error);
+}
+}
+
+// データを再読み込み
+await loadEquipmentData();
+showEmptySearchState();
+
+showSuccess(`${addedCount}件のデータをデータベースに保存しました`);
+
+} catch (error) {
+console.error('ファイルアップロードエラー:', error);
+showError(`エラー: ${error.message}`);
+} finally {
+elements.fileInput.value = '';
+}
+}
+
+// 手動追加
+elements.addManualBtn.addEventListener('click', handleManualAdd);
+
+async function handleManualAdd() {
+const name = elements.manualName.value.trim();
+const points = parseInt(elements.manualPoints.value);
+
+if (!name || !points || points <= 0) {
+showError('商品名と有効な点数を入力してください');
+return;
+}
+
+try {
+showInfo('データを保存中...');
+await FirebaseDB.addEquipment(name, points);
+await loadEquipmentData();
+
+elements.manualName.value = '';
+elements.manualPoints.value = '';
+showSuccess(`"${name}" を追加しました`);
+
+// 検索結果を更新
+if (elements.searchInput.value.trim()) {
+performSearch(elements.searchInput.value);
+} else {
+showEmptySearchState();
+}
+
+} catch (error) {
+console.error('手動追加エラー:', error);
+showError('データの追加に失敗しました');
+}
+}
+
+// 検索機能
+elements.searchInput.addEventListener('input', (e) => {
+const query = e.target.value.trim();
+if (query === '') {
+showEmptySearchState();
+} else {
+performSearch(query);
+}
 });
 
-// Service Worker（オフライン対応）
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(err => {
-      console.log('Service Worker登録失敗:', err);
-    });
-  });
+function performSearch(query) {
+if (welfareEquipment.length === 0) {
+showNoDataState();
+return;
 }
+
+filteredItems = welfareEquipment.filter(item => 
+item.name.toLowerCase().includes(query.toLowerCase())
+);
+
+displaySearchResults(filteredItems);
+}
+
+function displaySearchResults(items) {
+if (items.length === 0) {
+elements.searchResults.innerHTML = `
+<div class="empty-state">
+<h3>該当する品目が見つかりません</h3>
+<p>別のキーワードで検索してみてください</p>
+</div>
+`;
+return;
+}
+
+elements.searchResults.innerHTML = items.map(item => {
+const selectedItem = selectedItems.find(selected => selected.id === item.id);
+const isSelected = !!selectedItem;
+const quantity = selectedItem ? selectedItem.quantity : 0;
+
+const adminButtons = isAdminMode ? `
+<button class="edit-btn" onclick="editItem('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.points})">編集</button>
+<button class="delete-btn" onclick="deleteItem('${item.id}', '${item.name.replace(/'/g, "\\'")}')">削除</button>
+` : '';
+
+return `
+<div class="result-item">
+<div class="item-info">
+<div class="item-name">${item.name}</div>
+<div class="item-points">${item.points}点/月</div>
+</div>
+<div class="item-actions">
+<button class="add-btn" onclick="addItem('${item.id}')">
+${isSelected ? `追加済み (${quantity}個)` : '追加'}
+</button>
+${adminButtons}
+</div>
+</div>
+`;
+}).join('');
+}
+
+// アイテム操作
+function addItem(itemId) {
+const item = welfareEquipment.find(item => item.id === itemId);
+if (!item) return;
+
+const existingIndex = selectedItems.findIndex(selected => selected.id === itemId);
+if (existingIndex !== -1) {
+selectedItems[existingIndex].quantity += 1;
+} else {
+selectedItems.push({
+...item,
+quantity: 1
+});
+}
+
+updateCalculator();
+updateMobileCount();
+saveSelectedItems();
+displaySearchResults(filteredItems);
+}
+
+function updateQuantity(itemId, change) {
+const itemIndex = selectedItems.findIndex(item => item.id === itemId);
+if (itemIndex === -1) return;
+
+selectedItems[itemIndex].quantity = Math.max(1, selectedItems[itemIndex].quantity + change);
+updateCalculator();
+updateMobileCount();
+saveSelectedItems();
+displaySearchResults(filteredItems);
+}
+
+function removeItem(itemId) {
+selectedItems = selectedItems.filter(item => item.id !== itemId);
+updateCalculator();
+updateMobileCount();
+saveSelectedItems();
+displaySearchResults(filteredItems);
+}
+
+async function editItem(id, currentName, currentPoints) {
+const newName = prompt('商品名を編集:', currentName);
+if (!newName || newName.trim() === '') return;
+
+const newPoints = prompt('点数を編集:', currentPoints);
+const points = parseInt(newPoints);
+if (!points || points <= 0) return;
+
+try {
+showInfo('データを更新中...');
+await FirebaseDB.updateEquipment(id, newName.trim(), points);
+await loadEquipmentData();
+performSearch(elements.searchInput.value);
+showSuccess('データを更新しました');
+} catch (error) {
+console.error('編集エラー:', error);
+showError('データの更新に失敗しました');
+}
+}
+
+async function deleteItem(id, name) {
+if (!confirm(`"${name}" を削除しますか？`)) return;
+
+try {
+showInfo('データを削除中...');
+await FirebaseDB.deleteEquipment(id);
+await loadEquipmentData();
+performSearch(elements.searchInput.value);
+showSuccess('データを削除しました');
+} catch (error) {
+console.error('削除エラー:', error);
+showError('データの削除に失敗しました');
+}
+}
+
+// 計算機更新
+function updateCalculator() {
+const totalPoints = selectedItems.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+elements.totalPointsElement.textContent = `${totalPoints}点`;
+
+if (selectedItems.length === 0) {
+elements.selectedItemsContainer.innerHTML = `
+<div class="empty-state">
+<p>選択された品目がここに表示されます</p>
+</div>
+`;
+} else {
+elements.selectedItemsContainer.innerHTML = selectedItems.map(item => `
+<div class="selected-item">
+<div class="selected-item-info">
+<div class="selected-item-name">${item.name}</div>
+<div class="selected-item-points">${item.points}点/月 × ${item.quantity}個 = ${item.points * item.quantity}点</div>
+</div>
+<div class="quantity-controls">
+<button class="quantity-btn" onclick="updateQuantity('${item.id}', -1)" ${item.quantity <= 1 ? 'disabled' : ''}>−</button>
+<div class="quantity-display">${item.quantity}</div>
+<button class="quantity-btn" onclick="updateQuantity('${item.id}', 1)">+</button>
+</div>
+<button class="remove-btn" onclick="removeItem('${item.id}')">×</button>
+</div>
+`).join('');
+}
+}
+
+function updateMobileCount() {
+const totalItems = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+elements.mobileCountSpan.textContent = totalItems;
+}
+
+// 全削除
+elements.clearAllBtn.addEventListener('click', () => {
+selectedItems = [];
+updateCalculator();
+updateMobileCount();
+saveSelectedItems();
+displaySearchResults(filteredItems);
+});
+
+// モバイル表示切り替え
+elements.toggleCalculatorBtn.addEventListener('click', () => {
+elements.calculator.classList.add('show');
+elements.closeCalculatorBtn.style.display = 'block';
+});
+
+elements.closeCalculatorBtn.addEventListener('click', () => {
+elements.calculator.classList.remove('show');
+elements.closeCalculatorBtn.style.display = 'none';
+});
+
+// 状態表示関数
+function showEmptySearchState() {
+elements.searchResults.innerHTML = `
+<div class="empty-state">
+<h3>福祉用具を検索してください</h3>
+<p>品目名を入力すると検索結果が表示されます</p>
+</div>
+`;
+}
+
+function showNoDataState() {
+elements.searchResults.innerHTML = `
+<div class="empty-state">
+<h3>データがありません</h3>
+<p>管理者モードでデータを追加してください</p>
+</div>
+`;
+}
+
+function showInfo(message) {
+elements.adminStatus.innerHTML = `<div class="status-message status-info">${message}</div>`;
+setTimeout(clearStatus, 3000);
+}
+
+function showSuccess(message) {
+elements.adminStatus.innerHTML = `<div class="status-message status-success">${message}</div>`;
+setTimeout(clearStatus, 5000);
+}
+
+function showError(message) {
+elements.adminStatus.innerHTML = `<div class="status-message status-error">${message}</div>`;
+setTimeout(clearStatus, 8000);
+}
+
+function clearStatus() {
+elements.adminStatus.innerHTML = '';
+}
+
+// アプリケーション初期化
+window.addEventListener('load', () => {
+// Firebase が読み込まれるまで少し待つ
+setTimeout(initializeApp, 1000);
+});
 </script>
 </body>
 </html>
