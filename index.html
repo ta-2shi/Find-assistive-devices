@@ -106,47 +106,13 @@ margin-bottom: 20px;
 
 .search-input {
 width: 100%;
-padding: 16px 50px 16px 20px;
+padding: 16px 20px;
 border: none;
 border-radius: 12px;
 background: rgba(255, 255, 255, 0.9);
 font-size: 16px;
 box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 transition: all 0.3s ease;
-}
-
-.search-clear-btn {
-position: absolute;
-right: 15px;
-top: 50%;
-transform: translateY(-50%);
-background: none;
-border: none;
-cursor: pointer;
-width: 24px;
-height: 24px;
-border-radius: 50%;
-display: flex;
-align-items: center;
-justify-content: center;
-background: rgba(107, 114, 128, 0.1);
-color: #6b7280;
-font-size: 14px;
-font-weight: bold;
-transition: all 0.2s ease;
-opacity: 0;
-visibility: hidden;
-}
-
-.search-clear-btn.visible {
-opacity: 1;
-visibility: visible;
-}
-
-.search-clear-btn:hover {
-background: rgba(107, 114, 128, 0.2);
-color: #374151;
-transform: translateY(-50%) scale(1.1);
 }
 
 .admin-panel {
@@ -597,15 +563,8 @@ animation: spin 1s linear infinite;
   }
 
   .search-input {
-    padding: 12px 40px 12px 16px;
+    padding: 12px 16px;
     font-size: 16px; /* iOSズーム防止 */
-  }
-
-  .search-clear-btn {
-    right: 12px;
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
   }
 
   /* 検索結果の表示領域をさらに拡張 */
@@ -767,7 +726,6 @@ Excelファイルをアップロード
 
 <div class="search-container">
 <input type="text" class="search-input" id="searchInput" placeholder="福祉用具を検索...">
-<button class="search-clear-btn" id="searchClearBtn">×</button>
 </div>
 </div>
 
@@ -818,7 +776,6 @@ manualPoints: document.getElementById('manualPoints'),
 addManualBtn: document.getElementById('addManualBtn'),
 adminStatus: document.getElementById('adminStatus'),
 searchInput: document.getElementById('searchInput'),
-searchClearBtn: document.getElementById('searchClearBtn'),
 searchResults: document.getElementById('searchResults'),
 selectedItemsContainer: document.getElementById('selectedItems'),
 totalPointsElement: document.getElementById('totalPoints'),
@@ -958,6 +915,90 @@ performSearch(elements.searchInput.value);
 } else {
 showEmptySearchState();
 }
+}
+
+// Excel ファイルアップロード
+elements.fileInput.addEventListener('change', handleFileUpload);
+
+async function handleFileUpload(e) {
+const file = e.target.files[0];
+if (!file) return;
+
+try {
+showInfo('ファイルを読み込み中...');
+
+const arrayBuffer = await file.arrayBuffer();
+const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+const firstSheetName = workbook.SheetNames[0];
+const worksheet = workbook.Sheets[firstSheetName];
+const data = XLSX.utils.sheet_to_json(worksheet, { header: ['name', 'points'], range: 1 });
+
+const validData = data
+.filter(row => row.name && row.points)
+.map(row => ({
+name: String(row.name).trim(),
+points: parseInt(row.points) || 0
+}))
+.filter(item => item.name && item.points > 0);
+
+if (validData.length === 0) {
+throw new Error('有効なデータが見つかりませんでした');
+}
+
+showInfo(`${validData.length}件のデータをデータベースに保存中...`);
+
+// Firebase に保存
+let addedCount = 0;
+for (const item of validData) {
+try {
+await FirebaseDB.addEquipment(item.name, item.points);
+addedCount++;
+} catch (error) {
+console.error(`"${item.name}" の保存に失敗:`, error);
+}
+}
+
+// データを再読み込み
+await loadEquipmentData();
+showEmptySearchState();
+
+showSuccess(`${addedCount}件のデータをデータベースに保存しました`);
+
+} catch (error) {
+console.error('ファイルアップロードエラー:', error);
+showError(`エラー: ${error.message}`);
+} finally {
+elements.fileInput.value = '';
+}
+}
+
+// 手動追加
+elements.addManualBtn.addEventListener('click', handleManualAdd);
+
+async function handleManualAdd() {
+const name = elements.manualName.value.trim();
+const points = parseInt(elements.manualPoints.value);
+
+if (!name || !points || points <= 0) {
+showError('商品名と有効な点数を入力してください');
+return;
+}
+
+try {
+showInfo('データを保存中...');
+await FirebaseDB.addEquipment(name, points);
+await loadEquipmentData();
+
+elements.manualName.value = '';
+elements.manualPoints.value = '';
+showSuccess(`"${name}" を追加しました`);
+
+// 検索結果を更新
+if (elements.searchInput.value.trim()) {
+performSearch(elements.searchInput.value);
+} else {
+showEmptySearchState();
+}
 
 } catch (error) {
 console.error('手動追加エラー:', error);
@@ -968,29 +1009,11 @@ showError('データの追加に失敗しました');
 // 検索機能
 elements.searchInput.addEventListener('input', (e) => {
 const query = e.target.value.trim();
-toggleClearButton(query);
 if (query === '') {
 showEmptySearchState();
 } else {
 performSearch(query);
 }
-});
-
-// 検索クリアボタンの表示/非表示切り替え
-function toggleClearButton(query) {
-if (query) {
-elements.searchClearBtn.classList.add('visible');
-} else {
-elements.searchClearBtn.classList.remove('visible');
-}
-}
-
-// 検索クリアボタンのイベントリスナー
-elements.searchClearBtn.addEventListener('click', () => {
-elements.searchInput.value = '';
-elements.searchClearBtn.classList.remove('visible');
-showEmptySearchState();
-elements.searchInput.focus();
 });
 
 function performSearch(query) {
@@ -1218,88 +1241,4 @@ setTimeout(initializeApp, 1000);
 });
 </script>
 </body>
-</html>.value.trim()) {
-performSearch(elements.searchInput.value);
-} else {
-showEmptySearchState();
-}
-}
-
-// Excel ファイルアップロード
-elements.fileInput.addEventListener('change', handleFileUpload);
-
-async function handleFileUpload(e) {
-const file = e.target.files[0];
-if (!file) return;
-
-try {
-showInfo('ファイルを読み込み中...');
-
-const arrayBuffer = await file.arrayBuffer();
-const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-const firstSheetName = workbook.SheetNames[0];
-const worksheet = workbook.Sheets[firstSheetName];
-const data = XLSX.utils.sheet_to_json(worksheet, { header: ['name', 'points'], range: 1 });
-
-const validData = data
-.filter(row => row.name && row.points)
-.map(row => ({
-name: String(row.name).trim(),
-points: parseInt(row.points) || 0
-}))
-.filter(item => item.name && item.points > 0);
-
-if (validData.length === 0) {
-throw new Error('有効なデータが見つかりませんでした');
-}
-
-showInfo(`${validData.length}件のデータをデータベースに保存中...`);
-
-// Firebase に保存
-let addedCount = 0;
-for (const item of validData) {
-try {
-await FirebaseDB.addEquipment(item.name, item.points);
-addedCount++;
-} catch (error) {
-console.error(`"${item.name}" の保存に失敗:`, error);
-}
-}
-
-// データを再読み込み
-await loadEquipmentData();
-showEmptySearchState();
-
-showSuccess(`${addedCount}件のデータをデータベースに保存しました`);
-
-} catch (error) {
-console.error('ファイルアップロードエラー:', error);
-showError(`エラー: ${error.message}`);
-} finally {
-elements.fileInput.value = '';
-}
-}
-
-// 手動追加
-elements.addManualBtn.addEventListener('click', handleManualAdd);
-
-async function handleManualAdd() {
-const name = elements.manualName.value.trim();
-const points = parseInt(elements.manualPoints.value);
-
-if (!name || !points || points <= 0) {
-showError('商品名と有効な点数を入力してください');
-return;
-}
-
-try {
-showInfo('データを保存中...');
-await FirebaseDB.addEquipment(name, points);
-await loadEquipmentData();
-
-elements.manualName.value = '';
-elements.manualPoints.value = '';
-showSuccess(`"${name}" を追加しました`);
-
-// 検索結果を更新
-if (elements.searchInput
+</html>
