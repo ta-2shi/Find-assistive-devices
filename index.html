@@ -106,13 +106,47 @@ margin-bottom: 20px;
 
 .search-input {
 width: 100%;
-padding: 16px 20px;
+padding: 16px 50px 16px 20px;
 border: none;
 border-radius: 12px;
 background: rgba(255, 255, 255, 0.9);
 font-size: 16px;
 box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 transition: all 0.3s ease;
+}
+
+.search-clear-btn {
+position: absolute;
+right: 15px;
+top: 50%;
+transform: translateY(-50%);
+background: none;
+border: none;
+cursor: pointer;
+width: 28px;
+height: 28px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+background: rgba(107, 114, 128, 0.1);
+color: #6b7280;
+font-size: 16px;
+font-weight: bold;
+transition: all 0.2s ease;
+opacity: 0;
+visibility: hidden;
+}
+
+.search-clear-btn.visible {
+opacity: 1;
+visibility: visible;
+}
+
+.search-clear-btn:hover {
+background: rgba(107, 114, 128, 0.2);
+color: #374151;
+transform: translateY(-50%) scale(1.1);
 }
 
 .admin-panel {
@@ -526,8 +560,6 @@ animation: spin 1s linear infinite;
 100% { transform: rotate(360deg); }
 }
 
-/* 既存のCSSに追加または置き換えた部分 */
-
 /* モバイル用のレスポンシブ調整 */
 @media (max-width: 767px) {
   .container {
@@ -545,7 +577,6 @@ animation: spin 1s linear infinite;
     margin-bottom: 8px;
   }
 
-  /* モードボタンをコンパクトに */
   .mode-toggle {
     margin-bottom: 8px;
     padding: 2px;
@@ -559,22 +590,27 @@ animation: spin 1s linear infinite;
 
   .search-container {
     margin-bottom: 8px;
-    margin-top: -4px; /* 検索窓をさらに上に */
+    margin-top: -4px;
   }
 
   .search-input {
-    padding: 12px 16px;
-    font-size: 16px; /* iOSズーム防止 */
+    padding: 12px 40px 12px 16px;
+    font-size: 16px;
   }
 
-  /* 検索結果の表示領域をさらに拡張 */
+  .search-clear-btn {
+    right: 12px;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+  }
+
   .search-results {
-    min-height: calc(100vh - 220px); /* ヘッダーを縮小した分拡張 */
+    min-height: calc(100vh - 220px);
     max-height: calc(100vh - 220px);
     padding: 15px;
   }
 
-  /* メイン コンテンツ の高さ調整 */
   .main-content {
     flex: 1;
     height: calc(100vh - 210px);
@@ -620,7 +656,6 @@ animation: spin 1s linear infinite;
     margin-bottom: 16px;
   }
 
-  /* 検索結果のアイテム表示を最適化 */
   .result-item {
     margin-bottom: 8px;
     padding: 12px;
@@ -646,13 +681,11 @@ animation: spin 1s linear infinite;
     font-size: 12px;
   }
 
-  /* iOS Safari の viewport 問題に対応 */
   .container {
     min-height: 100vh;
     min-height: -webkit-fill-available;
   }
 
-  /* 管理者パネルもコンパクトに */
   .admin-panel {
     padding: 12px;
     margin-bottom: 8px;
@@ -678,12 +711,10 @@ animation: spin 1s linear infinite;
     font-size: 14px;
   }
 
-  /* キーボードが出た時の対応 */
   .search-input:focus + .main-content .search-results {
     max-height: 50vh;
   }
 }
-  
 </style>
 </head>
 <body>
@@ -726,6 +757,7 @@ Excelファイルをアップロード
 
 <div class="search-container">
 <input type="text" class="search-input" id="searchInput" placeholder="福祉用具を検索...">
+<button class="search-clear-btn" id="searchClearBtn">×</button>
 </div>
 </div>
 
@@ -776,6 +808,7 @@ manualPoints: document.getElementById('manualPoints'),
 addManualBtn: document.getElementById('addManualBtn'),
 adminStatus: document.getElementById('adminStatus'),
 searchInput: document.getElementById('searchInput'),
+searchClearBtn: document.getElementById('searchClearBtn'),
 searchResults: document.getElementById('searchResults'),
 selectedItemsContainer: document.getElementById('selectedItems'),
 totalPointsElement: document.getElementById('totalPoints'),
@@ -1009,11 +1042,29 @@ showError('データの追加に失敗しました');
 // 検索機能
 elements.searchInput.addEventListener('input', (e) => {
 const query = e.target.value.trim();
+toggleClearButton(query);
 if (query === '') {
 showEmptySearchState();
 } else {
 performSearch(query);
 }
+});
+
+// 検索クリアボタンの表示/非表示切り替え
+function toggleClearButton(query) {
+if (query) {
+elements.searchClearBtn.classList.add('visible');
+} else {
+elements.searchClearBtn.classList.remove('visible');
+}
+}
+
+// 検索クリアボタンのイベントリスナー
+elements.searchClearBtn.addEventListener('click', () => {
+elements.searchInput.value = '';
+elements.searchClearBtn.classList.remove('visible');
+showEmptySearchState();
+elements.searchInput.focus();
 });
 
 function performSearch(query) {
