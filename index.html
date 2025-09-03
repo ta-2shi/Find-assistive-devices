@@ -203,7 +203,7 @@ font-size: 14px;
 
 .manual-add {
 display: grid;
-grid-template-columns: 2fr 1fr auto;
+grid-template-columns: 2fr 1fr 1fr 1fr auto;
 gap: 12px;
 align-items: end;
 }
@@ -281,7 +281,7 @@ grid-template-columns: 1fr 400px;
 }
 
 .manual-add {
-grid-template-columns: 2fr 1fr auto;
+grid-template-columns: 2fr 1fr 1fr 1fr auto;
 }
 }
 
@@ -289,6 +289,11 @@ grid-template-columns: 2fr 1fr auto;
 .manual-add {
 grid-template-columns: 1fr;
 gap: 8px;
+}
+
+.manual-add .input-group:nth-child(3),
+.manual-add .input-group:nth-child(4) {
+grid-column: span 1;
 }
 }
 
@@ -331,6 +336,21 @@ margin-bottom: 4px;
 .item-points {
 color: #6b7280;
 font-size: 14px;
+}
+
+.item-category, .item-tais-code {
+color: #8b5cf6;
+font-size: 12px;
+font-weight: 500;
+margin-top: 2px;
+}
+
+.item-category {
+color: #059669;
+}
+
+.item-tais-code {
+color: #d97706;
 }
 
 .item-actions {
@@ -735,7 +755,7 @@ animation: spin 1s linear infinite;
 Excelファイルをアップロード
 </button>
 <div class="file-upload-text">
-福祉用具リスト（A列：商品名、B列：点数）
+福祉用具リスト（A列：商品名、B列：点数、C列：品目、D列：taisコード）
 </div>
 </div>
 
@@ -747,6 +767,14 @@ Excelファイルをアップロード
 <div class="input-group">
 <label class="input-label">点数/月</label>
 <input type="number" class="manual-input" id="manualPoints" placeholder="点数">
+</div>
+<div class="input-group">
+<label class="input-label">品目</label>
+<input type="text" class="manual-input" id="manualCategory" placeholder="品目を入力">
+</div>
+<div class="input-group">
+<label class="input-label">taisコード</label>
+<input type="text" class="manual-input" id="manualTaisCode" placeholder="taisコードを入力">
 </div>
 <button class="add-manual-btn" id="addManualBtn">手動追加</button>
 </div>
@@ -805,6 +833,8 @@ adminPanel: document.getElementById('adminPanel'),
 fileInput: document.getElementById('fileInput'),
 manualName: document.getElementById('manualName'),
 manualPoints: document.getElementById('manualPoints'),
+manualCategory: document.getElementById('manualCategory'),
+manualTaisCode: document.getElementById('manualTaisCode'),
 addManualBtn: document.getElementById('addManualBtn'),
 adminStatus: document.getElementById('adminStatus'),
 searchInput: document.getElementById('searchInput'),
@@ -842,13 +872,15 @@ throw error;
 }
 },
 
-async addEquipment(name, points) {
+async addEquipment(name, points, category = '', taisCode = '') {
 try {
 const docRef = await window.firestore.addDoc(
 window.firestore.collection(window.db, 'welfare_equipment'),
 {
 name: name.trim(),
 points: parseInt(points),
+category: category.trim(),
+taisCode: taisCode.trim(),
 createdAt: new Date()
 }
 );
@@ -859,13 +891,15 @@ throw error;
 }
 },
 
-async updateEquipment(id, name, points) {
+async updateEquipment(id, name, points, category = '', taisCode = '') {
 try {
 await window.firestore.updateDoc(
 window.firestore.doc(window.db, 'welfare_equipment', id),
 {
 name: name.trim(),
 points: parseInt(points),
+category: category.trim(),
+taisCode: taisCode.trim(),
 updatedAt: new Date()
 }
 );
@@ -964,13 +998,15 @@ const arrayBuffer = await file.arrayBuffer();
 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
 const firstSheetName = workbook.SheetNames[0];
 const worksheet = workbook.Sheets[firstSheetName];
-const data = XLSX.utils.sheet_to_json(worksheet, { header: ['name', 'points'], range: 1 });
+const data = XLSX.utils.sheet_to_json(worksheet, { header: ['name', 'points', 'category', 'taisCode'], range: 1 });
 
 const validData = data
 .filter(row => row.name && row.points)
 .map(row => ({
 name: String(row.name).trim(),
-points: parseInt(row.points) || 0
+points: parseInt(row.points) || 0,
+category: row.category ? String(row.category).trim() : '',
+taisCode: row.taisCode ? String(row.taisCode).trim() : ''
 }))
 .filter(item => item.name && item.points > 0);
 
@@ -984,7 +1020,7 @@ showInfo(`${validData.length}件のデータをデータベースに保存中...
 let addedCount = 0;
 for (const item of validData) {
 try {
-await FirebaseDB.addEquipment(item.name, item.points);
+await FirebaseDB.addEquipment(item.name, item.points, item.category, item.taisCode);
 addedCount++;
 } catch (error) {
 console.error(`"${item.name}" の保存に失敗:`, error);
@@ -1011,6 +1047,8 @@ elements.addManualBtn.addEventListener('click', handleManualAdd);
 async function handleManualAdd() {
 const name = elements.manualName.value.trim();
 const points = parseInt(elements.manualPoints.value);
+const category = elements.manualCategory.value.trim();
+const taisCode = elements.manualTaisCode.value.trim();
 
 if (!name || !points || points <= 0) {
 showError('商品名と有効な点数を入力してください');
@@ -1019,11 +1057,13 @@ return;
 
 try {
 showInfo('データを保存中...');
-await FirebaseDB.addEquipment(name, points);
+await FirebaseDB.addEquipment(name, points, category, taisCode);
 await loadEquipmentData();
 
 elements.manualName.value = '';
 elements.manualPoints.value = '';
+elements.manualCategory.value = '';
+elements.manualTaisCode.value = '';
 showSuccess(`"${name}" を追加しました`);
 
 // 検索結果を更新
@@ -1097,15 +1137,20 @@ const isSelected = !!selectedItem;
 const quantity = selectedItem ? selectedItem.quantity : 0;
 
 const adminButtons = isAdminMode ? `
-<button class="edit-btn" onclick="editItem('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.points})">編集</button>
+<button class="edit-btn" onclick="editItem('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.points}, '${(item.category || '').replace(/'/g, "\\'")}', '${(item.taisCode || '').replace(/'/g, "\\'")}')">編集</button>
 <button class="delete-btn" onclick="deleteItem('${item.id}', '${item.name.replace(/'/g, "\\'")}')">削除</button>
 ` : '';
+
+const categoryDisplay = item.category ? `<div class="item-category">品目: ${item.category}</div>` : '';
+const taisCodeDisplay = item.taisCode ? `<div class="item-tais-code">taisコード: ${item.taisCode}</div>` : '';
 
 return `
 <div class="result-item">
 <div class="item-info">
 <div class="item-name">${item.name}</div>
 <div class="item-points">${item.points}点/月</div>
+${categoryDisplay}
+${taisCodeDisplay}
 </div>
 <div class="item-actions">
 <button class="add-btn" onclick="addItem('${item.id}')">
@@ -1158,7 +1203,7 @@ saveSelectedItems();
 displaySearchResults(filteredItems);
 }
 
-async function editItem(id, currentName, currentPoints) {
+async function editItem(id, currentName, currentPoints, currentCategory = '', currentTaisCode = '') {
 const newName = prompt('商品名を編集:', currentName);
 if (!newName || newName.trim() === '') return;
 
@@ -1166,9 +1211,15 @@ const newPoints = prompt('点数を編集:', currentPoints);
 const points = parseInt(newPoints);
 if (!points || points <= 0) return;
 
+const newCategory = prompt('品目を編集:', currentCategory);
+const category = newCategory !== null ? newCategory.trim() : '';
+
+const newTaisCode = prompt('taisコードを編集:', currentTaisCode);
+const taisCode = newTaisCode !== null ? newTaisCode.trim() : '';
+
 try {
 showInfo('データを更新中...');
-await FirebaseDB.updateEquipment(id, newName.trim(), points);
+await FirebaseDB.updateEquipment(id, newName.trim(), points, category, taisCode);
 await loadEquipmentData();
 performSearch(elements.searchInput.value);
 showSuccess('データを更新しました');
