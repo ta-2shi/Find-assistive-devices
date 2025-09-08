@@ -239,6 +239,34 @@ font-weight: 600;
 height: fit-content;
 }
 
+.clear-database-btn {
+background: linear-gradient(45deg, #dc2626, #991b1b);
+color: white;
+border: none;
+padding: 12px 24px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+width: 100%;
+font-size: 14px;
+transition: all 0.3s ease;
+}
+
+.clear-database-btn:hover {
+transform: translateY(-1px);
+box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.clear-database-btn:active {
+transform: translateY(0);
+}
+
+.database-management {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
 .status-message {
 margin-top: 12px;
 padding: 8px 16px;
@@ -779,6 +807,10 @@ Excelファイルをアップロード
 <button class="add-manual-btn" id="addManualBtn">手動追加</button>
 </div>
 
+<div class="database-management" style="margin-top: 20px; padding-top: 20px; border-top: 2px dashed rgba(255, 255, 255, 0.3);">
+<button class="clear-database-btn" id="clearDatabaseBtn">データベース全クリア</button>
+</div>
+
 <div id="adminStatus"></div>
 </div>
 </div>
@@ -836,6 +868,7 @@ manualPoints: document.getElementById('manualPoints'),
 manualCategory: document.getElementById('manualCategory'),
 manualTaisCode: document.getElementById('manualTaisCode'),
 addManualBtn: document.getElementById('addManualBtn'),
+clearDatabaseBtn: document.getElementById('clearDatabaseBtn'),
 adminStatus: document.getElementById('adminStatus'),
 searchInput: document.getElementById('searchInput'),
 searchClearBtn: document.getElementById('searchClearBtn'),
@@ -916,6 +949,30 @@ window.firestore.doc(window.db, 'welfare_equipment', id)
 );
 } catch (error) {
 console.error('データ削除エラー:', error);
+throw error;
+}
+},
+
+async clearAllEquipment() {
+try {
+const q = window.firestore.query(
+window.firestore.collection(window.db, 'welfare_equipment')
+);
+const querySnapshot = await window.firestore.getDocs(q);
+
+const deletePromises = [];
+querySnapshot.forEach((doc) => {
+deletePromises.push(
+window.firestore.deleteDoc(
+window.firestore.doc(window.db, 'welfare_equipment', doc.id)
+)
+);
+});
+
+await Promise.all(deletePromises);
+return querySnapshot.size;
+} catch (error) {
+console.error('全データ削除エラー:', error);
 throw error;
 }
 }
@@ -1043,6 +1100,42 @@ elements.fileInput.value = '';
 
 // 手動追加
 elements.addManualBtn.addEventListener('click', handleManualAdd);
+
+// データベース全クリア
+elements.clearDatabaseBtn.addEventListener('click', handleClearDatabase);
+
+async function handleClearDatabase() {
+// 二重確認で安全性を高める
+const firstConfirm = confirm('⚠️ 警告: データベースの全データが削除されます。\nこの操作は取り消せません。\n\n本当に続行しますか？');
+if (!firstConfirm) return;
+
+const secondConfirm = confirm('最終確認: 全ての福祉用具データが完全に削除されます。\n\n削除を実行しますか？');
+if (!secondConfirm) return;
+
+try {
+showInfo('データベースを全クリア中...');
+const deletedCount = await FirebaseDB.clearAllEquipment();
+
+// ローカルデータも初期化
+welfareEquipment = [];
+filteredItems = [];
+selectedItems = [];
+
+// 画面を更新
+updateCalculator();
+updateMobileCount();
+saveSelectedItems();
+showEmptySearchState();
+elements.searchInput.value = '';
+toggleClearButton('');
+
+showSuccess(`${deletedCount}件のデータを削除しました。データベースが空になりました。`);
+
+} catch (error) {
+console.error('データベース全クリアエラー:', error);
+showError('データベースの全クリアに失敗しました');
+}
+}
 
 async function handleManualAdd() {
 const name = elements.manualName.value.trim();
