@@ -12,7 +12,7 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
-  import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+  import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
   
   // Firebase設定
  const firebaseConfig = {
@@ -30,7 +30,7 @@
   
   // グローバルスコープに公開
   window.db = db;
-  window.firestore = { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy };
+  window.firestore = { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch };
 </script>
 
 <style>
@@ -776,6 +776,18 @@ animation: spin 1s linear infinite;
 </div>
 
 <div class="admin-panel" id="adminPanel">
+<div class="database-info" style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<div>
+<h3 style="color: rgba(255, 255, 255, 0.9); margin: 0 0 5px 0; font-size: 16px;">データベース情報</h3>
+<p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 14px;">登録件数: <span id="dbCount" style="color: #10b981; font-weight: 600;">読み込み中...</span></p>
+</div>
+<button class="refresh-count-btn" id="refreshCountBtn" style="background: linear-gradient(45deg, #6366f1, #4f46e5); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+更新
+</button>
+</div>
+</div>
+
 <div class="upload-section">
 <div class="file-upload-container">
 <input type="file" class="file-input" id="fileInput" accept=".xlsx,.xls">
@@ -869,6 +881,8 @@ manualCategory: document.getElementById('manualCategory'),
 manualTaisCode: document.getElementById('manualTaisCode'),
 addManualBtn: document.getElementById('addManualBtn'),
 clearDatabaseBtn: document.getElementById('clearDatabaseBtn'),
+refreshCountBtn: document.getElementById('refreshCountBtn'),
+dbCountSpan: document.getElementById('dbCount'),
 adminStatus: document.getElementById('adminStatus'),
 searchInput: document.getElementById('searchInput'),
 searchClearBtn: document.getElementById('searchClearBtn'),
@@ -884,6 +898,18 @@ mobileCountSpan: document.getElementById('mobileCount')
 
 // Firebase データベース操作
 const FirebaseDB = {
+async getEquipmentCount() {
+try {
+const querySnapshot = await window.firestore.getDocs(
+window.firestore.collection(window.db, 'welfare_equipment')
+);
+return querySnapshot.size;
+} catch (error) {
+console.error('件数取得エラー:', error);
+throw error;
+}
+},
+
 async loadEquipment() {
 try {
 const q = window.firestore.query(
@@ -982,6 +1008,7 @@ throw error;
 async function initializeApp() {
 try {
 await loadEquipmentData();
+await updateDatabaseCount(); // 件数を表示
 showEmptySearchState();
 loadSelectedItems();
 } catch (error) {
@@ -997,6 +1024,17 @@ filteredItems = welfareEquipment;
 showInfo(`${welfareEquipment.length}件のデータを読み込みました`);
 } catch (error) {
 throw error;
+}
+}
+
+// データベース件数の更新
+async function updateDatabaseCount() {
+try {
+const count = await FirebaseDB.getEquipmentCount();
+elements.dbCountSpan.textContent = `${count.toLocaleString()}件`;
+} catch (error) {
+elements.dbCountSpan.textContent = 'エラー';
+console.error('件数取得エラー:', error);
 }
 }
 
@@ -1073,19 +1111,33 @@ throw new Error('有効なデータが見つかりませんでした');
 
 showInfo(`${validData.length}件のデータをデータベースに保存中...`);
 
-// Firebase に保存
-let addedCount = 0;
+// Firebase に保存（最高速バッチ処理）
+showInfo(`${validData.length}件のデータを高速保存中...`);
+
+try {
+addedCount = await FirebaseDB.addBulkEquipment(validData);
+} catch (error) {
+console.error('高速保存でエラーが発生しました:', error);
+showError('高速保存に失敗しました。個別保存に切り替えます...');
+
+// フォールバック：個別処理
+addedCount = 0;
 for (const item of validData) {
 try {
 await FirebaseDB.addEquipment(item.name, item.points, item.category, item.taisCode);
 addedCount++;
+if (addedCount % 100 === 0) {
+showInfo(`${addedCount}/${validData.length}件保存完了...`);
+}
 } catch (error) {
 console.error(`"${item.name}" の保存に失敗:`, error);
+}
 }
 }
 
 // データを再読み込み
 await loadEquipmentData();
+await updateDatabaseCount(); // 件数も更新
 showEmptySearchState();
 
 showSuccess(`${addedCount}件のデータをデータベースに保存しました`);
@@ -1103,6 +1155,9 @@ elements.addManualBtn.addEventListener('click', handleManualAdd);
 
 // データベース全クリア
 elements.clearDatabaseBtn.addEventListener('click', handleClearDatabase);
+
+// 件数更新
+elements.refreshCountBtn.addEventListener('click', updateDatabaseCount);
 
 async function handleClearDatabase() {
 // 二重確認で安全性を高める
@@ -1128,6 +1183,7 @@ saveSelectedItems();
 showEmptySearchState();
 elements.searchInput.value = '';
 toggleClearButton('');
+await updateDatabaseCount(); // 件数も更新
 
 showSuccess(`${deletedCount}件のデータを削除しました。データベースが空になりました。`);
 
@@ -1152,6 +1208,7 @@ try {
 showInfo('データを保存中...');
 await FirebaseDB.addEquipment(name, points, category, taisCode);
 await loadEquipmentData();
+await updateDatabaseCount(); // 件数も更新
 
 elements.manualName.value = '';
 elements.manualPoints.value = '';
@@ -1314,6 +1371,7 @@ try {
 showInfo('データを更新中...');
 await FirebaseDB.updateEquipment(id, newName.trim(), points, category, taisCode);
 await loadEquipmentData();
+await updateDatabaseCount(); // 件数も更新（変更はないが、整合性のため）
 performSearch(elements.searchInput.value);
 showSuccess('データを更新しました');
 } catch (error) {
@@ -1329,6 +1387,7 @@ try {
 showInfo('データを削除中...');
 await FirebaseDB.deleteEquipment(id);
 await loadEquipmentData();
+await updateDatabaseCount(); // 件数も更新
 performSearch(elements.searchInput.value);
 showSuccess('データを削除しました');
 } catch (error) {
