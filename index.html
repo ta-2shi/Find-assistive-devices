@@ -1408,11 +1408,15 @@ elements.selectedItemsContainer.innerHTML = `
 </div>
 `;
 } else {
-elements.selectedItemsContainer.innerHTML = selectedItems.map(item => `
+elements.selectedItemsContainer.innerHTML = selectedItems.map(item => {
+const taisCodeDisplay = item.taisCode ? `<div class="selected-item-tais" style="color: #d97706; font-size: 11px; font-weight: 500; margin-top: 2px;">taisコード: ${item.taisCode}</div>` : '';
+
+return `
 <div class="selected-item">
 <div class="selected-item-info">
 <div class="selected-item-name">${item.name}</div>
 <div class="selected-item-points">${item.points}点/月 × ${item.quantity}個 = ${item.points * item.quantity}点</div>
+${taisCodeDisplay}
 </div>
 <div class="quantity-controls">
 <button class="quantity-btn" onclick="updateQuantity('${item.id}', -1)" ${item.quantity <= 1 ? 'disabled' : ''}>−</button>
@@ -1421,7 +1425,8 @@ elements.selectedItemsContainer.innerHTML = selectedItems.map(item => `
 </div>
 <button class="remove-btn" onclick="removeItem('${item.id}')">×</button>
 </div>
-`).join('');
+`;
+}).join('');
 }
 }
 
