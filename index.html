@@ -1409,11 +1409,13 @@ elements.selectedItemsContainer.innerHTML = `
 `;
 } else {
 elements.selectedItemsContainer.innerHTML = selectedItems.map(item => {
+const categoryDisplay = item.category ? `<div class="selected-item-category" style="color: #059669; font-size: 11px; font-weight: 600; margin-bottom: 3px;">品目: ${item.category}</div>` : '';
 const taisCodeDisplay = item.taisCode ? `<div class="selected-item-tais" style="color: #d97706; font-size: 11px; font-weight: 500; margin-top: 2px;">taisコード: ${item.taisCode}</div>` : '';
 
 return `
 <div class="selected-item">
 <div class="selected-item-info">
+${categoryDisplay}
 <div class="selected-item-name">${item.name}</div>
 <div class="selected-item-points">${item.points}点/月 × ${item.quantity}個 = ${item.points * item.quantity}点</div>
 ${taisCodeDisplay}
