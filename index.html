@@ -467,6 +467,46 @@ padding: 12px;
 background: rgba(255, 255, 255, 0.7);
 border-radius: 8px;
 margin-bottom: 8px;
+cursor: move;
+transition: all 0.3s ease;
+}
+
+.selected-item:hover {
+background: rgba(255, 255, 255, 0.8);
+transform: translateY(-1px);
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.selected-item.dragging {
+opacity: 0.5;
+transform: rotate(3deg);
+z-index: 1000;
+box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.selected-item.drag-over {
+border-top: 3px solid #2563eb;
+}
+
+.drag-handle {
+display: flex;
+align-items: center;
+justify-content: center;
+width: 20px;
+height: 40px;
+color: #9ca3af;
+cursor: grab;
+margin-right: 12px;
+font-size: 14px;
+transition: color 0.2s ease;
+}
+
+.drag-handle:hover {
+color: #4b5563;
+}
+
+.drag-handle:active {
+cursor: grabbing;
 }
 
 .selected-item-info {
@@ -1408,12 +1448,13 @@ elements.selectedItemsContainer.innerHTML = `
 </div>
 `;
 } else {
-elements.selectedItemsContainer.innerHTML = selectedItems.map(item => {
+elements.selectedItemsContainer.innerHTML = selectedItems.map((item, index) => {
 const categoryDisplay = item.category ? `<div class="selected-item-category" style="color: #059669; font-size: 11px; font-weight: 600; margin-bottom: 3px;">品目: ${item.category}</div>` : '';
 const taisCodeDisplay = item.taisCode ? `<div class="selected-item-tais" style="color: #d97706; font-size: 11px; font-weight: 500; margin-top: 2px;">taisコード: ${item.taisCode}</div>` : '';
 
 return `
-<div class="selected-item">
+<div class="selected-item" draggable="true" data-index="${index}" data-item-id="${item.id}">
+<div class="drag-handle">⋮⋮</div>
 <div class="selected-item-info">
 ${categoryDisplay}
 <div class="selected-item-name">${item.name}</div>
@@ -1429,12 +1470,80 @@ ${taisCodeDisplay}
 </div>
 `;
 }).join('');
+
+// ドラッグ&ドロップのイベントリスナーを追加
+setupDragAndDrop();
 }
 }
 
 function updateMobileCount() {
 const totalItems = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
 elements.mobileCountSpan.textContent = totalItems;
+}
+
+// ドラッグ&ドロップ機能のセットアップ
+function setupDragAndDrop() {
+const selectedItemElements = elements.selectedItemsContainer.querySelectorAll('.selected-item');
+let draggedElement = null;
+let draggedIndex = null;
+
+selectedItemElements.forEach((element, index) => {
+element.addEventListener('dragstart', (e) => {
+draggedElement = element;
+draggedIndex = parseInt(element.dataset.index);
+element.classList.add('dragging');
+e.dataTransfer.effectAllowed = 'move';
+e.dataTransfer.setData('text/html', element.outerHTML);
+});
+
+element.addEventListener('dragend', (e) => {
+element.classList.remove('dragging');
+draggedElement = null;
+draggedIndex = null;
+});
+
+element.addEventListener('dragover', (e) => {
+e.preventDefault();
+e.dataTransfer.dropEffect = 'move';
+});
+
+element.addEventListener('dragenter', (e) => {
+e.preventDefault();
+if (element !== draggedElement) {
+element.classList.add('drag-over');
+}
+});
+
+element.addEventListener('dragleave', (e) => {
+element.classList.remove('drag-over');
+});
+
+element.addEventListener('drop', (e) => {
+e.preventDefault();
+element.classList.remove('drag-over');
+
+if (draggedElement && element !== draggedElement) {
+const targetIndex = parseInt(element.dataset.index);
+
+// アイテムの順序を変更
+reorderSelectedItems(draggedIndex, targetIndex);
+}
+});
+});
+}
+
+// 選択アイテムの順序変更
+function reorderSelectedItems(fromIndex, toIndex) {
+if (fromIndex === toIndex) return;
+
+// 配列から要素を移動
+const movedItem = selectedItems.splice(fromIndex, 1)[0];
+selectedItems.splice(toIndex, 0, movedItem);
+
+// 画面を更新
+updateCalculator();
+updateMobileCount();
+saveSelectedItems();
 }
 
 // 全削除
