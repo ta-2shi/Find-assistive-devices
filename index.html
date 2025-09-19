@@ -443,6 +443,41 @@ margin-bottom: 16px;
 display: flex;
 justify-content: space-between;
 align-items: center;
+flex-wrap: wrap;
+gap: 8px;
+}
+
+.calculator-header-left {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.print-btn {
+background: linear-gradient(45deg, #8b5cf6, #7c3aed);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+font-size: 14px;
+transition: all 0.3s ease;
+display: flex;
+align-items: center;
+gap: 6px;
+}
+
+.print-btn:hover {
+transform: translateY(-1px);
+box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.print-btn:disabled {
+background: #d1d5db;
+cursor: not-allowed;
+transform: none;
+box-shadow: none;
 }
 
 .total-points {
@@ -802,6 +837,22 @@ animation: spin 1s linear infinite;
   .search-input:focus + .main-content .search-results {
     max-height: 50vh;
   }
+
+  .calculator-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .calculator-header-left {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .print-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
 }
 </style>
 </head>
@@ -888,7 +939,12 @@ Excelファイルをアップロード
 <div class="calculator" id="calculator">
 <button class="close-btn" id="closeCalculator" style="display: none;">× 閉じる</button>
 <div class="calculator-title">
+<div class="calculator-header-left">
 選択した品目
+<button class="print-btn" id="printBtn">
+📄 印刷
+</button>
+</div>
 <span class="total-points" id="totalPoints">0点</span>
 </div>
 <div class="selected-items" id="selectedItems">
@@ -902,6 +958,7 @@ Excelファイルをアップロード
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 // グローバル変数
 let welfareEquipment = [];
@@ -933,6 +990,7 @@ clearAllBtn: document.getElementById('clearAll'),
 toggleCalculatorBtn: document.getElementById('toggleCalculator'),
 calculator: document.getElementById('calculator'),
 closeCalculatorBtn: document.getElementById('closeCalculator'),
+printBtn: document.getElementById('printBtn'),
 mobileCountSpan: document.getElementById('mobileCount')
 };
 
@@ -1565,6 +1623,114 @@ elements.closeCalculatorBtn.addEventListener('click', () => {
 elements.calculator.classList.remove('show');
 elements.closeCalculatorBtn.style.display = 'none';
 });
+
+// PDF印刷機能
+elements.printBtn.addEventListener('click', generatePDF);
+
+// PDF生成関数
+async function generatePDF() {
+if (selectedItems.length === 0) {
+alert('印刷する品目がありません。まず福祉用具を選択してください。');
+return;
+}
+
+try {
+elements.printBtn.disabled = true;
+elements.printBtn.textContent = '生成中...';
+
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF('p', 'mm', 'a4');
+
+// 日本語フォントの設定（代替：英数字のみで作成）
+doc.setFont('helvetica');
+
+// ヘッダー情報
+const currentDate = new Date().toLocaleDateString('ja-JP');
+const totalPoints = selectedItems.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+
+// タイトル
+doc.setFontSize(18);
+doc.text('福祉用具 選択品目一覧', 20, 25);
+
+// 作成日と合計点数
+doc.setFontSize(12);
+doc.text(`作成日: ${currentDate}`, 20, 40);
+doc.text(`合計点数: ${totalPoints.toLocaleString()}点`, 20, 50);
+
+// テーブルヘッダー
+doc.setFontSize(10);
+doc.setFillColor(240, 240, 240);
+doc.rect(20, 60, 170, 8, 'F');
+doc.text('No.', 25, 66);
+doc.text('品目', 40, 66);
+doc.text('商品名', 80, 66);
+doc.text('単価', 130, 66);
+doc.text('数量', 150, 66);
+doc.text('合計', 170, 66);
+
+// 罫線
+doc.setLineWidth(0.1);
+doc.line(20, 68, 190, 68);
+
+// データ行
+let yPosition = 78;
+selectedItems.forEach((item, index) => {
+// ページの終わりに近づいたら改ページ
+if (yPosition > 270) {
+doc.addPage();
+yPosition = 25;
+}
+
+const itemTotal = item.points * item.quantity;
+
+// 商品名が長い場合の省略処理
+let displayName = item.name;
+if (displayName.length > 20) {
+displayName = displayName.substring(0, 17) + '...';
+}
+
+let displayCategory = item.category || '';
+if (displayCategory.length > 15) {
+displayCategory = displayCategory.substring(0, 12) + '...';
+}
+
+doc.text(`${index + 1}`, 25, yPosition);
+doc.text(displayCategory, 40, yPosition);
+doc.text(displayName, 80, yPosition);
+doc.text(`${item.points}点`, 130, yPosition);
+doc.text(`${item.quantity}個`, 150, yPosition);
+doc.text(`${itemTotal}点`, 170, yPosition);
+
+// taisコードがある場合は次の行に表示
+if (item.taisCode) {
+yPosition += 6;
+doc.setFontSize(8);
+doc.setTextColor(100);
+doc.text(`taisコード: ${item.taisCode}`, 80, yPosition);
+doc.setFontSize(10);
+doc.setTextColor(0);
+}
+
+yPosition += 12;
+});
+
+// フッター
+doc.setFontSize(8);
+doc.setTextColor(100);
+doc.text('福祉用具点数計算アプリで作成', 20, 290);
+
+// PDF保存
+const filename = `福祉用具一覧_${currentDate.replace(/\//g, '')}.pdf`;
+doc.save(filename);
+
+} catch (error) {
+console.error('PDF生成エラー:', error);
+alert('PDF生成中にエラーが発生しました。');
+} finally {
+elements.printBtn.disabled = false;
+elements.printBtn.innerHTML = '📄 印刷';
+}
+}
 
 // 状態表示関数
 function showEmptySearchState() {
