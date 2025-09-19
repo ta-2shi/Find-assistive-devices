@@ -958,8 +958,8 @@ Excelファイルをアップロード
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 // グローバル変数
 let welfareEquipment = [];
@@ -1639,168 +1639,144 @@ try {
 elements.printBtn.disabled = true;
 elements.printBtn.textContent = '生成中...';
 
-// 現在の日付と合計点数
-const currentDate = new Date().toLocaleDateString('ja-JP');
-const totalPoints = selectedItems.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+// 印刷用のHTMLを作成
+const printContent = createPrintHTML();
 
-// テーブルデータの準備
-const tableBody = [
-// ヘッダー行
-[
-{ text: 'No.', style: 'tableHeader' },
-{ text: '品目', style: 'tableHeader' },
-{ text: '商品名', style: 'tableHeader' },
-{ text: '単価', style: 'tableHeader' },
-{ text: '数量', style: 'tableHeader' },
-{ text: '合計', style: 'tableHeader' }
-]
-];
+// 印刷用の要素を一時的にDOMに追加
+const printElement = document.createElement('div');
+printElement.innerHTML = printContent;
+printElement.style.position = 'absolute';
+printElement.style.left = '-9999px';
+printElement.style.top = '0';
+printElement.style.width = '794px'; // A4サイズの幅（px）
+printElement.style.backgroundColor = 'white';
+printElement.style.padding = '40px';
+printElement.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+document.body.appendChild(printElement);
 
-// データ行の追加
-selectedItems.forEach((item, index) => {
-const itemTotal = item.points * item.quantity;
-
-// メイン行
-tableBody.push([
-{ text: (index + 1).toString(), style: 'tableCell' },
-{ text: item.category || '', style: 'tableCell' },
-{ text: item.name, style: 'tableCell' },
-{ text: `${item.points}点`, style: 'tableCell' },
-{ text: `${item.quantity}個`, style: 'tableCell' },
-{ text: `${itemTotal}点`, style: 'tableCell' }
-]);
-
-// taisコードがある場合は追加行
-if (item.taisCode) {
-tableBody.push([
-{ text: '', style: 'tableCell' },
-{ text: '', style: 'tableCell' },
-{ text: `taisコード: ${item.taisCode}`, style: 'taisCode', colSpan: 4 },
-{}, {}, {}
-]);
-}
+// html2canvasで画像に変換
+const canvas = await html2canvas(printElement, {
+scale: 2, // 高解像度
+useCORS: true,
+backgroundColor: '#ffffff',
+width: 794,
+height: 1123 // A4サイズの高さ（px）
 });
 
-// PDF文書の定義
-const docDefinition = {
-pageSize: 'A4',
-pageMargins: [40, 60, 40, 60],
-content: [
-// ヘッダー
-{
-text: '福祉用具 選択品目一覧',
-style: 'header',
-alignment: 'center',
-margin: [0, 0, 0, 20]
-},
+// 一時的な要素を削除
+document.body.removeChild(printElement);
 
-// 作成日と合計点数
-{
-columns: [
-{ text: `作成日: ${currentDate}`, style: 'subheader' },
-{ text: `合計点数: ${totalPoints.toLocaleString()}点`, style: 'subheader', alignment: 'right' }
-],
-margin: [0, 0, 0, 20]
-},
-  
-// テーブル
-{
-table: {
-headerRows: 1,
-widths: ['auto', '*', '*', 'auto', 'auto', 'auto'],
-body: tableBody
-},
-layout: {
-fillColor: function (rowIndex, node, columnIndex) {
-return (rowIndex === 0) ? '#f0f0f0' : null;
-},
-hLineWidth: function (i, node) {
-return 0.5;
-},
-vLineWidth: function (i, node) {
-return 0.5;
-},
-hLineColor: function (i, node) {
-return '#cccccc';
-},
-vLineColor: function (i, node) {
-return '#cccccc';
+// jsPDFでPDF作成
+const { jsPDF } = window.jspdf;
+const pdf = new jsPDF('p', 'mm', 'a4');
+
+// キャンバスをPDFに追加
+const imgData = canvas.toDataURL('image/png');
+const imgWidth = 210; // A4の幅（mm）
+const pageHeight = 297; // A4の高さ（mm）
+const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+let heightLeft = imgHeight;
+let position = 0;
+
+// ページに収まる場合はそのまま追加
+if (heightLeft <= pageHeight) {
+pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+} else {
+// 複数ページに分割
+while (heightLeft >= 0) {
+pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+heightLeft -= pageHeight;
+position -= pageHeight;
+
+if (heightLeft > 0) {
+pdf.addPage();
 }
 }
-},
-
-// 合計行
-{
-text: `総合計: ${totalPoints.toLocaleString()}点`,
-style: 'total',
-alignment: 'right',
-margin: [0, 20, 0, 0]
 }
-],
 
-// フッター
-footer: function(currentPage, pageCount) {
-return {
-text: `福祉用具点数計算アプリで作成 - ${currentPage} / ${pageCount}`,
-alignment: 'center',
-style: 'footer'
-};
-},
-
-// スタイル定義
-styles: {
-header: {
-fontSize: 18,
-bold: true,
-color: '#333333'
-},
-subheader: {
-fontSize: 12,
-color: '#666666'
-},
-tableHeader: {
-bold: true,
-fontSize: 10,
-color: '#333333',
-alignment: 'center'
-},
-tableCell: {
-fontSize: 9,
-color: '#333333'
-},
-taisCode: {
-fontSize: 8,
-color: '#d97706',
-italics: true
-},
-total: {
-fontSize: 14,
-bold: true,
-color: '#333333'
-},
-footer: {
-fontSize: 8,
-color: '#999999'
-}
-},
-
-// デフォルトスタイル
-defaultStyle: {
-font: 'Roboto'
-}
-};
-
-// PDF生成とダウンロード
+// ファイル名生成
+const currentDate = new Date().toLocaleDateString('ja-JP');
 const filename = `福祉用具一覧_${currentDate.replace(/\//g, '')}.pdf`;
-pdfMake.createPdf(docDefinition).download(filename);
+
+// PDF保存
+pdf.save(filename);
 
 } catch (error) {
 console.error('PDF生成エラー:', error);
-alert('PDF生成中にエラーが発生しました。');
+alert('PDF生成中にエラーが発生しました。ブラウザが対応していない可能性があります。');
 } finally {
 elements.printBtn.disabled = false;
 elements.printBtn.innerHTML = '📄 印刷';
 }
+}
+
+// 印刷用HTML作成関数
+function createPrintHTML() {
+const currentDate = new Date().toLocaleDateString('ja-JP');
+const totalPoints = selectedItems.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+
+let itemsHTML = '';
+selectedItems.forEach((item, index) => {
+const itemTotal = item.points * item.quantity;
+const categoryDisplay = item.category ? item.category : '';
+const taisDisplay = item.taisCode ? `<div style="color: #d97706; font-size: 12px; margin-top: 5px;">taisコード: ${item.taisCode}</div>` : '';
+    
+itemsHTML += `
+<tr style="border-bottom: 1px solid #e5e7eb;">
+<td style="padding: 12px; text-align: center; border-right: 1px solid #e5e7eb;">${index + 1}</td>
+<td style="padding: 12px; border-right: 1px solid #e5e7eb;">
+<div style="font-weight: 600;">${categoryDisplay}</div>
+</td>
+<td style="padding: 12px; border-right: 1px solid #e5e7eb;">
+<div style="font-weight: 600; margin-bottom: 5px;">${item.name}</div>
+${taisDisplay}
+</td>
+<td style="padding: 12px; text-align: center; border-right: 1px solid #e5e7eb;">${item.points}点</td>
+<td style="padding: 12px; text-align: center; border-right: 1px solid #e5e7eb;">${item.quantity}個</td>
+<td style="padding: 12px; text-align: center; font-weight: 600;">${itemTotal}点</td>
+</tr>
+`;
+});
+
+return `
+<div style="max-width: 714px; margin: 0 auto; background: white;">
+<div style="text-align: center; margin-bottom: 30px;">
+<h1 style="font-size: 24px; font-weight: bold; color: #1e293b; margin: 0;">福祉用具 選択品目一覧</h1>
+</div>
+
+<div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px; color: #6b7280;">
+<div>作成日: ${currentDate}</div>
+<div style="font-weight: 600; color: #2563eb;">合計点数: ${totalPoints.toLocaleString()}点</div>
+</div>
+
+<table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 14px;">
+<thead>
+<tr style="background: #f8fafc; border-bottom: 2px solid #374151;">
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">No.</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">品目</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">商品名</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">単価</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">数量</th>
+<th style="padding: 12px; text-align: center; font-weight: bold;">合計</th>
+</tr>
+</thead>
+<tbody>
+${itemsHTML}
+</tbody>
+</table>
+
+<div style="text-align: right; margin-top: 20px; padding-top: 20px; border-top: 2px solid #374151;">
+<div style="font-size: 18px; font-weight: bold; color: #1e293b;">
+総合計: ${totalPoints.toLocaleString()}点
+</div>
+</div>
+
+<div style="text-align: center; margin-top: 40px; font-size: 12px; color: #9ca3af;">
+福祉用具点数計算アプリで作成
+</div>
+</div>
+`;
 }
 
 // 状態表示関数
