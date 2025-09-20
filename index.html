@@ -1679,20 +1679,17 @@ const imgHeight = (canvas.height * imgWidth) / canvas.width;
 let heightLeft = imgHeight;
 let position = 0;
 
-// ページに収まる場合はそのまま追加
-if (heightLeft <= pageHeight) {
-pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-} else {
-// 複数ページに分割
-while (heightLeft >= 0) {
+// 最初のページを追加
 pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
 heightLeft -= pageHeight;
 position -= pageHeight;
 
-if (heightLeft > 0) {
+// 残りの高さが10mm以上ある場合のみ追加ページを作成
+while (heightLeft > 10) {
 pdf.addPage();
-}
-}
+pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+heightLeft -= pageHeight;
+position -= pageHeight;
 }
 
 // ファイル名生成
