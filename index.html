@@ -1656,22 +1656,42 @@ document.body.appendChild(printElement);
 
 // html2canvasで画像に変換
 const canvas = await html2canvas(printElement, {
-scale: 2, // 高解像度
+scale: 1.5, // 解像度を下げて容量削減（2 → 1.5）
 useCORS: true,
 backgroundColor: '#ffffff',
 width: 794,
-height: 1123 // A4サイズの高さ（px）
+height: 1123, // A4サイズの高さ（px）
+allowTaint: true,
+logging: false // ログ出力を無効化してパフォーマンス向上
 });
 
 // 一時的な要素を削除
 document.body.removeChild(printElement);
 
+// 画像を圧縮（JPEGで容量削減）
+const tempCanvas = document.createElement('canvas');
+const tempCtx = tempCanvas.getContext('2d');
+tempCanvas.width = canvas.width;
+tempCanvas.height = canvas.height;
+
+// グレースケール化（オプション - さらに容量削減したい場合）
+const shouldUseGrayscale = true; // 必要に応じてfalseに変更
+
+if (shouldUseGrayscale) {
+// グレースケール処理
+tempCtx.filter = 'grayscale(100%)';
+tempCtx.drawImage(canvas, 0, 0);
+} else {
+// カラーのまま
+tempCtx.drawImage(canvas, 0, 0);
+}
+
 // jsPDFでPDF作成
 const { jsPDF } = window.jspdf;
 const pdf = new jsPDF('p', 'mm', 'a4');
 
-// キャンバスをPDFに追加
-const imgData = canvas.toDataURL('image/png');
+// 圧縮されたJPEG画像として取得（品質を調整して容量削減）
+const imgData = tempCanvas.toDataURL('image/jpeg', 0.7); // 品質70%で圧縮
 const imgWidth = 210; // A4の幅（mm）
 const pageHeight = 297; // A4の高さ（mm）
 const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -1679,15 +1699,15 @@ const imgHeight = (canvas.height * imgWidth) / canvas.width;
 let heightLeft = imgHeight;
 let position = 0;
 
-// 最初のページを追加
-pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+// 最初のページを追加（圧縮オプション付き）
+pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM'); // 圧縮レベル指定
 heightLeft -= pageHeight;
 position -= pageHeight;
 
 // 残りの高さが10mm以上ある場合のみ追加ページを作成
 while (heightLeft > 10) {
 pdf.addPage();
-pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
 heightLeft -= pageHeight;
 position -= pageHeight;
 }
