@@ -447,10 +447,39 @@ flex-wrap: wrap;
 gap: 8px;
 }
 
+.actual-cost-btn {
+background: linear-gradient(45deg, #f59e0b, #d97706);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+transition: all 0.3s ease;
+font-size: 12px;
+}
+
+.actual-cost-btn.active {
+background: linear-gradient(45deg, #dc2626, #991b1b);
+}
+
+.actual-cost-btn:hover {
+transform: scale(1.05);
+}
+
 .calculator-header-left {
 display: flex;
 align-items: center;
 gap: 12px;
+}
+
+.actual-cost-total {
+background: linear-gradient(45deg, #dc2626, #991b1b);
+color: white;
+padding: 4px 12px;
+border-radius: 20px;
+font-size: 14px;
+margin-right: 8px;
 }
 
 .print-btn {
@@ -945,7 +974,10 @@ Excelファイルをアップロード
 📄 印刷
 </button>
 </div>
+<div style="display: flex; align-items: center;">
+<span class="actual-cost-total" id="actualCostTotal" style="display: none;">0円</span>
 <span class="total-points" id="totalPoints">0点</span>
+</div>
 </div>
 <div class="selected-items" id="selectedItems">
 <div class="empty-state">
@@ -992,6 +1024,7 @@ toggleCalculatorBtn: document.getElementById('toggleCalculator'),
 calculator: document.getElementById('calculator'),
 closeCalculatorBtn: document.getElementById('closeCalculator'),
 printBtn: document.getElementById('printBtn'),
+actualCostTotalElement: document.getElementById('actualCostTotal'),
 mobileCountSpan: document.getElementById('mobileCount')
 };
 
@@ -1039,6 +1072,7 @@ name: name.trim(),
 points: parseInt(points),
 category: category.trim(),
 taisCode: taisCode.trim(),
+isActualCost: false, // 実費フラグを追加
 createdAt: new Date()
 }
 );
@@ -1049,7 +1083,7 @@ throw error;
 }
 },
 
-async updateEquipment(id, name, points, category = '', taisCode = '') {
+async updateEquipment(id, name, points, category = '', taisCode = '', isActualCost = false) {
 try {
 await window.firestore.updateDoc(
 window.firestore.doc(window.db, 'welfare_equipment', id),
@@ -1058,6 +1092,7 @@ name: name.trim(),
 points: parseInt(points),
 category: category.trim(),
 taisCode: taisCode.trim(),
+isActualCost: isActualCost,
 updatedAt: new Date()
 }
 );
@@ -1452,7 +1487,34 @@ saveSelectedItems();
 displaySearchResults(filteredItems);
 }
 
-async function editItem(id, currentName, currentPoints, currentCategory = '', currentTaisCode = '') {
+// 実費トグル機能
+async function toggleActualCost(itemId) {
+const item = welfareEquipment.find(item => item.id === itemId);
+if (!item) return;
+
+const newActualCostState = !item.isActualCost;
+
+try {
+showInfo('実費設定を更新中...');
+await FirebaseDB.updateEquipment(
+item.id, 
+item.name, 
+item.points, 
+item.category, 
+item.taisCode, 
+newActualCostState
+);
+await loadEquipmentData();
+await updateDatabaseCount();
+performSearch(elements.searchInput.value || '');
+showSuccess(`"${item.name}" の実費設定を${newActualCostState ? 'ON' : 'OFF'}にしました`);
+} catch (error) {
+console.error('実費設定更新エラー:', error);
+showError('実費設定の更新に失敗しました');
+}
+}
+
+async function editItem(id, currentName, currentPoints, currentCategory = '', currentTaisCode = '', currentActualCost = false) {
 const newName = prompt('商品名を編集:', currentName);
 if (!newName || newName.trim() === '') return;
 
@@ -1466,11 +1528,13 @@ const category = newCategory !== null ? newCategory.trim() : '';
 const newTaisCode = prompt('taisコードを編集:', currentTaisCode);
 const taisCode = newTaisCode !== null ? newTaisCode.trim() : '';
 
+const actualCostConfirm = confirm(`実費対象として設定しますか？\n現在の設定: ${currentActualCost ? 'ON (実費対象)' : 'OFF (点数対象)'}`);
+
 try {
 showInfo('データを更新中...');
-await FirebaseDB.updateEquipment(id, newName.trim(), points, category, taisCode);
+await FirebaseDB.updateEquipment(id, newName.trim(), points, category, taisCode, actualCostConfirm);
 await loadEquipmentData();
-await updateDatabaseCount(); // 件数も更新（変更はないが、整合性のため）
+await updateDatabaseCount();
 performSearch(elements.searchInput.value);
 showSuccess('データを更新しました');
 } catch (error) {
@@ -1497,8 +1561,25 @@ showError('データの削除に失敗しました');
 
 // 計算機更新
 function updateCalculator() {
-const totalPoints = selectedItems.reduce((sum, item) => sum + (item.points * item.quantity), 0);
-elements.totalPointsElement.textContent = `${totalPoints}点`;
+// 通常の点数計算（実費以外）
+const normalPoints = selectedItems
+.filter(item => !item.isActualCost)
+.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+
+// 実費の合計計算
+const actualCostTotal = selectedItems
+.filter(item => item.isActualCost)
+.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+
+// 表示更新
+elements.totalPointsElement.textContent = `${normalPoints}点`;
+
+if (actualCostTotal > 0) {
+elements.actualCostTotalElement.textContent = `${actualCostTotal.toLocaleString()}円`;
+elements.actualCostTotalElement.style.display = 'inline-block';
+} else {
+elements.actualCostTotalElement.style.display = 'none';
+}
 
 if (selectedItems.length === 0) {
 elements.selectedItemsContainer.innerHTML = `
@@ -1510,6 +1591,10 @@ elements.selectedItemsContainer.innerHTML = `
 elements.selectedItemsContainer.innerHTML = selectedItems.map((item, index) => {
 const categoryDisplay = item.category ? `<div class="selected-item-category" style="color: #059669; font-size: 11px; font-weight: 600; margin-bottom: 3px;">品目: ${item.category}</div>` : '';
 const taisCodeDisplay = item.taisCode ? `<div class="selected-item-tais" style="color: #d97706; font-size: 11px; font-weight: 500; margin-top: 2px;">taisコード: ${item.taisCode}</div>` : '';
+const actualCostDisplay = item.isActualCost ? `<div class="selected-item-actual-cost" style="color: #dc2626; font-size: 10px; font-weight: 600; margin-top: 2px;">実費対象</div>` : '';
+
+const pointsUnit = item.isActualCost ? '円' : '点';
+const totalUnit = item.isActualCost ? '円' : '点';
 
 return `
 <div class="selected-item" draggable="true" data-index="${index}" data-item-id="${item.id}">
@@ -1517,8 +1602,9 @@ return `
 <div class="selected-item-info">
 ${categoryDisplay}
 <div class="selected-item-name">${item.name}</div>
-<div class="selected-item-points">${item.points}点/月 × ${item.quantity} = ${item.points * item.quantity}点</div>
+<div class="selected-item-points">${item.points}${pointsUnit}/月 × ${item.quantity} = ${item.points * item.quantity}${totalUnit}</div>
 ${taisCodeDisplay}
+${actualCostDisplay}
 </div>
 <div class="quantity-controls">
 <button class="quantity-btn" onclick="updateQuantity('${item.id}', -1)" ${item.quantity <= 1 ? 'disabled' : ''}>−</button>
