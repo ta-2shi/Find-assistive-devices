@@ -1616,6 +1616,28 @@ ${actualCostDisplay}
 `;
 }).join('');
 
+// 合計表示を追加
+let summaryHTML = '<div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">';
+summaryHTML += '<div style="text-align: center; font-weight: 600; margin-bottom: 10px; color: #374151;">合計</div>';
+
+if (actualCostTotal > 0) {
+summaryHTML += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">`;
+summaryHTML += `<span style="color: #6b7280;">実費商品:</span>`;
+summaryHTML += `<span style="font-weight: 600; color: #dc2626;">${actualCostTotal.toLocaleString()}円</span>`;
+summaryHTML += `</div>`;
+}
+
+if (normalPoints > 0) {
+summaryHTML += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">`;
+summaryHTML += `<span style="color: #6b7280;">点数商品:</span>`;
+summaryHTML += `<span style="font-weight: 600; color: #2563eb;">${normalPoints.toLocaleString()}点</span>`;
+summaryHTML += `</div>`;
+}
+
+summaryHTML += '</div>';
+
+elements.selectedItemsContainer.innerHTML += summaryHTML;
+
 // ドラッグ&ドロップのイベントリスナーを追加
 setupDragAndDrop();
 }
