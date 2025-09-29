@@ -1828,13 +1828,29 @@ elements.printBtn.innerHTML = '📄 印刷';
 // 印刷用HTML作成関数
 function createPrintHTML() {
 const currentDate = new Date().toLocaleDateString('ja-JP');
-const totalPoints = selectedItems.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+
+// 通常の点数計算（実費以外）
+const normalPoints = selectedItems
+.filter(item => !item.isActualCost)
+.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+
+// 実費の合計計算
+const actualCostTotal = selectedItems
+.filter(item => item.isActualCost)
+.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+
+// 総合計（円単位）
+const totalAmount = actualCostTotal + normalPoints;
 
 let itemsHTML = '';
 selectedItems.forEach((item, index) => {
 const itemTotal = item.points * item.quantity;
 const categoryDisplay = item.category ? item.category : '';
 const taisDisplay = item.taisCode ? `<div style="color: #d97706; font-size: 12px; margin-top: 5px;">taisコード: ${item.taisCode}</div>` : '';
+const actualCostLabel = item.isActualCost ? `<div style="color: #dc2626; font-size: 11px; font-weight: 600; margin-top: 3px;">実費対象</div>` : '';
+
+// 単位を実費かどうかで変更
+const unit = item.isActualCost ? '円' : '点';
     
 itemsHTML += `
 <tr style="border-bottom: 1px solid #e5e7eb;">
@@ -1845,13 +1861,24 @@ itemsHTML += `
 <td style="padding: 12px; border-right: 1px solid #e5e7eb;">
 <div style="font-weight: 600; margin-bottom: 5px;">${item.name}</div>
 ${taisDisplay}
+${actualCostLabel}
 </td>
-<td style="padding: 12px; text-align: center; border-right: 1px solid #e5e7eb;">${item.points}点</td>
+<td style="padding: 12px; text-align: center; border-right: 1px solid #e5e7eb;">${item.points}${unit}</td>
 <td style="padding: 12px; text-align: center; border-right: 1px solid #e5e7eb;">${item.quantity}</td>
-<td style="padding: 12px; text-align: center; font-weight: 600;">${itemTotal}点</td>
+<td style="padding: 12px; text-align: center; font-weight: 600;">${itemTotal}${unit}</td>
 </tr>
 `;
 });
+
+// 右上の合計表示（点数と実費を分けて表示）
+let topSummaryHTML = '';
+if (normalPoints > 0 && actualCostTotal > 0) {
+topSummaryHTML = `合計点数: ${normalPoints.toLocaleString()}点 / 実費: ${actualCostTotal.toLocaleString()}円`;
+} else if (normalPoints > 0) {
+topSummaryHTML = `合計点数: ${normalPoints.toLocaleString()}点`;
+} else if (actualCostTotal > 0) {
+topSummaryHTML = `実費合計: ${actualCostTotal.toLocaleString()}円`;
+}
 
 return `
 <div style="max-width: 714px; margin: 0 auto; background: white;">
@@ -1861,7 +1888,7 @@ return `
 
 <div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px; color: #6b7280;">
 <div>作成日: ${currentDate}</div>
-<div style="font-weight: 600; color: #2563eb;">合計点数: ${totalPoints.toLocaleString()}点</div>
+<div style="font-weight: 600; color: #2563eb;">${topSummaryHTML}</div>
 </div>
 
 <table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 14px;">
@@ -1882,7 +1909,7 @@ ${itemsHTML}
 
 <div style="text-align: right; margin-top: 20px; padding-top: 20px; border-top: 2px solid #374151;">
 <div style="font-size: 18px; font-weight: bold; color: #1e293b;">
-総合計: ${totalPoints.toLocaleString()}点
+総合計: ${totalAmount.toLocaleString()}円
 </div>
 </div>
 
