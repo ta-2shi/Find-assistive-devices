@@ -447,6 +447,26 @@ flex-wrap: wrap;
 gap: 8px;
 }
 
+.reorder-mode-btn {
+background: linear-gradient(45deg, #6366f1, #4f46e5);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+transition: all 0.3s ease;
+font-size: 12px;
+}
+
+.reorder-mode-btn.active {
+background: linear-gradient(45deg, #dc2626, #991b1b);
+}
+
+.reorder-mode-btn:hover {
+transform: scale(1.05);
+}
+
 .actual-cost-btn {
 background: linear-gradient(45deg, #f59e0b, #d97706);
 color: white;
@@ -531,11 +551,14 @@ padding: 12px;
 background: rgba(255, 255, 255, 0.7);
 border-radius: 8px;
 margin-bottom: 8px;
-cursor: move;
 transition: all 0.3s ease;
 }
 
-.selected-item:hover {
+.reorder-mode .selected-item {
+cursor: move;
+}
+
+.reorder-mode .selected-item:hover {
 background: rgba(255, 255, 255, 0.8);
 transform: translateY(-1px);
 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -553,7 +576,7 @@ border-top: 3px solid #2563eb;
 }
 
 .drag-handle {
-display: flex;
+display: none;
 align-items: center;
 justify-content: center;
 width: 20px;
@@ -565,6 +588,10 @@ font-size: 14px;
 transition: color 0.2s ease;
 }
 
+.reorder-mode .drag-handle {
+display: flex;
+}
+  
 .drag-handle:hover {
 color: #4b5563;
 }
@@ -970,6 +997,9 @@ Excelファイルをアップロード
 <div class="calculator-title">
 <div class="calculator-header-left">
 選択した品目
+<button class="reorder-mode-btn" id="reorderModeBtn">
+並び替え
+</button>
 <button class="print-btn" id="printBtn">
 📄 印刷
 </button>
@@ -998,6 +1028,7 @@ let welfareEquipment = [];
 let selectedItems = [];
 let filteredItems = [];
 let isAdminMode = false;
+let isReorderMode = false;
 
 // DOM要素
 const elements = {
@@ -1025,7 +1056,8 @@ calculator: document.getElementById('calculator'),
 closeCalculatorBtn: document.getElementById('closeCalculator'),
 printBtn: document.getElementById('printBtn'),
 actualCostTotalElement: document.getElementById('actualCostTotal'),
-mobileCountSpan: document.getElementById('mobileCount')
+mobileCountSpan: document.getElementById('mobileCount'),
+reorderModeBtn: document.getElementById('reorderModeBtn')
 };
 
 // Firebase データベース操作
@@ -1597,7 +1629,7 @@ const pointsUnit = item.isActualCost ? '円' : '点';
 const totalUnit = item.isActualCost ? '円' : '点';
 
 return `
-<div class="selected-item" draggable="true" data-index="${index}" data-item-id="${item.id}">
+<div class="selected-item" draggable="${isReorderMode}" data-index="${index}" data-item-id="${item.id}">
 <div class="drag-handle">⋮⋮</div>
 <div class="selected-item-info">
 ${categoryDisplay}
@@ -1644,7 +1676,14 @@ let draggedElement = null;
 let draggedIndex = null;
 
 selectedItemElements.forEach((element, index) => {
+// 並び替えモードの時のみドラッグ可能にする
+element.draggable = isReorderMode;
+
 element.addEventListener('dragstart', (e) => {
+if (!isReorderMode) {
+e.preventDefault();
+return;
+}
 draggedElement = element;
 draggedIndex = parseInt(element.dataset.index);
 element.classList.add('dragging');
@@ -1659,11 +1698,13 @@ draggedIndex = null;
 });
 
 element.addEventListener('dragover', (e) => {
+if (!isReorderMode) return;
 e.preventDefault();
 e.dataTransfer.dropEffect = 'move';
 });
 
 element.addEventListener('dragenter', (e) => {
+if (!isReorderMode) return;
 e.preventDefault();
 if (element !== draggedElement) {
 element.classList.add('drag-over');
@@ -1675,6 +1716,7 @@ element.classList.remove('drag-over');
 });
 
 element.addEventListener('drop', (e) => {
+if (!isReorderMode) return;
 e.preventDefault();
 element.classList.remove('drag-over');
 
@@ -1687,6 +1729,15 @@ reorderSelectedItems(draggedIndex, targetIndex);
 });
 });
 }
+
+// 並び替えモードの切り替え
+elements.reorderModeBtn.addEventListener('click', () => {
+isReorderMode = !isReorderMode;
+elements.selectedItemsContainer.classList.toggle('reorder-mode', isReorderMode);
+elements.reorderModeBtn.classList.toggle('active', isReorderMode);
+elements.reorderModeBtn.textContent = isReorderMode ? '完了' : '並び替え';
+updateCalculator();
+});
 
 // 選択アイテムの順序変更
 function reorderSelectedItems(fromIndex, toIndex) {
