@@ -1842,19 +1842,37 @@ const actualCostTotal = selectedItems
 // 総合計（円単位）
 const totalAmount = actualCostTotal + normalPoints;
 
-let itemsHTML = '';
-selectedItems.forEach((item, index) => {
+// 右上の合計表示（点数と実費を分けて表示）
+let topSummaryHTML = '';
+if (normalPoints > 0 && actualCostTotal > 0) {
+topSummaryHTML = `合計点数: ${normalPoints.toLocaleString()}点 / 実費: ${actualCostTotal.toLocaleString()}円`;
+} else if (normalPoints > 0) {
+topSummaryHTML = `合計点数: ${normalPoints.toLocaleString()}点`;
+} else if (actualCostTotal > 0) {
+topSummaryHTML = `実費合計: ${actualCostTotal.toLocaleString()}円`;
+}
+
+// 11件以下の場合は1ページ、11件超の場合は2ページに分割
+const itemsPerPage = 11;
+const needsSecondPage = selectedItems.length > itemsPerPage;
+
+// 1ページ目の品目
+const page1Items = selectedItems.slice(0, itemsPerPage);
+// 2ページ目の品目
+const page2Items = needsSecondPage ? selectedItems.slice(itemsPerPage) : [];
+
+// 品目HTMLを生成する関数
+function generateItemsHTML(items, startIndex = 0) {
+return items.map((item, index) => {
 const itemTotal = item.points * item.quantity;
 const categoryDisplay = item.category ? item.category : '';
 const taisDisplay = item.taisCode ? `<div style="color: #d97706; font-size: 12px; margin-top: 5px;">taisコード: ${item.taisCode}</div>` : '';
 const actualCostLabel = item.isActualCost ? `<div style="color: #dc2626; font-size: 11px; font-weight: 600; margin-top: 3px;">実費対象</div>` : '';
-
-// 単位を実費かどうかで変更
 const unit = item.isActualCost ? '円' : '点';
     
-itemsHTML += `
+return `
 <tr style="border-bottom: 1px solid #e5e7eb;">
-<td style="padding: 12px; text-align: center; border-right: 1px solid #e5e7eb;">${index + 1}</td>
+<td style="padding: 12px; text-align: center; border-right: 1px solid #e5e7eb;">${startIndex + index + 1}</td>
 <td style="padding: 12px; border-right: 1px solid #e5e7eb;">
 <div style="font-weight: 600;">${categoryDisplay}</div>
 </td>
@@ -1868,45 +1886,11 @@ ${actualCostLabel}
 <td style="padding: 12px; text-align: center; font-weight: 600;">${itemTotal}${unit}</td>
 </tr>
 `;
-});
-
-// 右上の合計表示（点数と実費を分けて表示）
-let topSummaryHTML = '';
-if (normalPoints > 0 && actualCostTotal > 0) {
-topSummaryHTML = `合計点数: ${normalPoints.toLocaleString()}点 / 実費: ${actualCostTotal.toLocaleString()}円`;
-} else if (normalPoints > 0) {
-topSummaryHTML = `合計点数: ${normalPoints.toLocaleString()}点`;
-} else if (actualCostTotal > 0) {
-topSummaryHTML = `実費合計: ${actualCostTotal.toLocaleString()}円`;
+}).join('');
 }
 
-return `
-<div style="max-width: 714px; margin: 0 auto; background: white;">
-<div style="text-align: center; margin-bottom: 30px;">
-<h1 style="font-size: 24px; font-weight: bold; color: #1e293b; margin: 0;">福祉用具レンタル搬入完了書</h1>
-</div>
-
-<div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px; color: #6b7280;">
-<div>作成日: ${currentDate}</div>
-<div style="font-weight: 600; color: #2563eb;">${topSummaryHTML}</div>
-</div>
-
-<table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 14px;">
-<thead>
-<tr style="background: #f8fafc; border-bottom: 2px solid #374151;">
-<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">No.</th>
-<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">品目</th>
-<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">商品名</th>
-<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">単価</th>
-<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">数量</th>
-<th style="padding: 12px; text-align: center; font-weight: bold;">合計</th>
-</tr>
-</thead>
-<tbody>
-${itemsHTML}
-</tbody>
-</table>
-
+// 署名欄と文言のHTML
+const signatureAndFooter = `
 <div style="text-align: right; margin-top: 20px; padding-top: 20px; border-top: 2px solid #374151;">
 <div style="font-size: 18px; font-weight: bold; color: #1e293b; margin-bottom: 30px;">
 総合計: ${totalAmount.toLocaleString()}円
@@ -1929,6 +1913,81 @@ ${itemsHTML}
 
 </div>
 `;
+
+<div style="text-align: right; margin-top: 15px; font-size: 12px; color: #9ca3af; line-height: 1.5;">
+<div>福祉用具点数</div>
+<div>計算アプリで</div>
+<div>作成</div>
+</div>
+`;
+
+// 1ページ目のHTML
+let page1HTML = `
+<div class="pdf-page" style="max-width: 714px; margin: 0 auto; background: white; page-break-after: always;">
+<div style="text-align: center; margin-bottom: 30px;">
+<h1 style="font-size: 24px; font-weight: bold; color: #1e293b; margin: 0;">福祉用具レンタル搬入完了書</h1>
+</div>
+
+<div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px; color: #6b7280;">
+<div>作成日: ${currentDate}</div>
+<div style="font-weight: 600; color: #2563eb;">${topSummaryHTML}</div>
+</div>
+
+<table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 14px;">
+<thead>
+<tr style="background: #f8fafc; border-bottom: 2px solid #374151;">
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">No.</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">品目</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">商品名</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">単価</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">数量</th>
+<th style="padding: 12px; text-align: center; font-weight: bold;">合計</th>
+</tr>
+</thead>
+<tbody>
+${generateItemsHTML(page1Items, 0)}
+</tbody>
+</table>
+`;
+
+// 11件以下の場合は1ページ目に署名欄と文言を追加
+if (!needsSecondPage) {
+page1HTML += signatureAndFooter;
+}
+
+page1HTML += `</div>`;
+
+// 2ページ目が必要な場合
+let page2HTML = '';
+if (needsSecondPage) {
+page2HTML = `
+<div class="pdf-page" style="max-width: 714px; margin: 0 auto; background: white; margin-top: 40px;">
+<div style="text-align: center; margin-bottom: 30px;">
+<h1 style="font-size: 24px; font-weight: bold; color: #1e293b; margin: 0;">福祉用具レンタル搬入完了書（続き）</h1>
+</div>
+
+<table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 14px;">
+<thead>
+<tr style="background: #f8fafc; border-bottom: 2px solid #374151;">
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">No.</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">品目</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">商品名</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">単価</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">数量</th>
+<th style="padding: 12px; text-align: center; font-weight: bold;">合計</th>
+</tr>
+</thead>
+<tbody>
+${generateItemsHTML(page2Items, itemsPerPage)}
+</tbody>
+</table>
+
+${signatureAndFooter}
+</div>
+`;
+}
+
+return page1HTML + page2HTML;
 }
 
 // 状態表示関数
