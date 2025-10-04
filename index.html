@@ -1736,86 +1736,62 @@ try {
 elements.printBtn.disabled = true;
 elements.printBtn.textContent = '生成中...';
 
-// 印刷用のHTMLを作成
+const { jsPDF } = window.jspdf;
+const pdf = new jsPDF('p', 'mm', 'a4');
+
+// 1ページ目と2ページ目を個別に生成
 const printContent = createPrintHTML();
+const parser = new DOMParser();
+const doc = parser.parseFromString(printContent, 'text/html');
+const pages = doc.querySelectorAll('.pdf-page');
 
-// 印刷用の要素を一時的にDOMに追加
-    const printElement = document.createElement('div');
-    printElement.innerHTML = printContent;
-    printElement.style.position = 'absolute';
-    printElement.style.left = '-9999px';
-    printElement.style.top = '0';
-    printElement.style.width = '794px'; // A4サイズの幅（px）
-    printElement.style.backgroundColor = 'white';
-    printElement.style.padding = '40px';
-    printElement.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    document.body.appendChild(printElement);
+for (let i = 0; i < pages.length; i++) {
+// 各ページを個別に処理
+const printElement = document.createElement('div');
+printElement.innerHTML = pages[i].outerHTML;
+printElement.style.position = 'absolute';
+printElement.style.left = '-9999px';
+printElement.style.top = '0';
+printElement.style.width = '794px';
+printElement.style.backgroundColor = 'white';
+printElement.style.padding = '40px';
+printElement.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+document.body.appendChild(printElement);
 
-    // DOMのレンダリングを待つ
-    await new Promise(resolve => setTimeout(resolve, 100));
+// レンダリング待機
+await new Promise(resolve => setTimeout(resolve, 200));
 
-    // html2canvasで画像に変換
-
+// html2canvasで画像に変換
 const canvas = await html2canvas(printElement, {
-  scale: 1.5, // 解像度を下げて容量削減（2 → 1.5）
-  useCORS: true,
-  backgroundColor: '#ffffff',
-  width: 794,
-  // height: 1123 の行を削除（コンテンツの高さに自動調整）
-  allowTaint: true,
-  logging: false // ログ出力を無効化してパフォーマンス向上
+scale: 1.5,
+useCORS: true,
+backgroundColor: '#ffffff',
+width: 794,
+allowTaint: true,
+logging: false
 });
 
 // 一時的な要素を削除
 document.body.removeChild(printElement);
 
-// 画像を圧縮（JPEGで容量削減）
-const tempCanvas = document.createElement('canvas');
-const tempCtx = tempCanvas.getContext('2d');
-tempCanvas.width = canvas.width;
-tempCanvas.height = canvas.height;
-
-// グレースケール化（オプション - さらに容量削減したい場合）
-const shouldUseGrayscale = false; // カラーを保持
-
-if (shouldUseGrayscale) {
-// グレースケール処理
-tempCtx.filter = 'grayscale(100%)';
-tempCtx.drawImage(canvas, 0, 0);
-} else {
-// カラーのまま
-tempCtx.drawImage(canvas, 0, 0);
-}
-
-// jsPDFでPDF作成
-const { jsPDF } = window.jspdf;
-const pdf = new jsPDF('p', 'mm', 'a4');
-
-// 圧縮されたJPEG画像として取得（品質を調整して容量削減）
-const imgData = tempCanvas.toDataURL('image/jpeg', 0.7); // 品質70%で圧縮
-const imgWidth = 210; // A4の幅（mm）
-const pageHeight = 297; // A4の高さ（mm）
+// 画像を圧縮
+const imgData = canvas.toDataURL('image/jpeg', 0.7);
+const imgWidth = 210;
+const pageHeight = 297;
 const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-let heightLeft = imgHeight;
-let position = 0;
+// 2ページ目以降は新しいページを追加
+if (i > 0) {
+pdf.addPage();
+}
 
-// 最初のページを追加（圧縮オプション付き）
-pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM'); // 圧縮レベル指定
-heightLeft -= pageHeight;
-position -= pageHeight;
-
-// 残りの高さがある場合は追加ページを作成
-while (heightLeft > 0) {  // ← 10 を 0 に変更
-  pdf.addPage();
-  pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
-  heightLeft -= pageHeight;
-  position -= pageHeight;
+// PDFに画像を追加
+pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight, undefined, 'MEDIUM');
 }
 
 // ファイル名生成
-      const currentDate = new Date().toLocaleDateString('ja-JP');
-      const filename = `福祉用具レンタル搬入完了書_${currentDate.replace(/\//g, '')}.pdf`;
+const currentDate = new Date().toLocaleDateString('ja-JP');
+const filename = `福祉用具レンタル搬入完了書_${currentDate.replace(/\//g, '')}.pdf`;
 
 // PDF保存
 pdf.save(filename);
