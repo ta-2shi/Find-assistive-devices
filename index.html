@@ -1853,7 +1853,7 @@ topSummaryHTML = `実費合計: ${actualCostTotal.toLocaleString()}円`;
 }
 
 // 11件以下の場合は1ページ、11件超の場合は2ページに分割
-const itemsPerPage = 11;
+const itemsPerPage = 10;
 const needsSecondPage = selectedItems.length > itemsPerPage;
 
 // 1ページ目の品目
@@ -1952,7 +1952,7 @@ page1HTML += `</div>`;
 let page2HTML = '';
 if (needsSecondPage) {
 page2HTML = `
-<div class="pdf-page" style="max-width: 714px; margin: 0 auto; background: white; margin-top: 40px;">
+<div class="pdf-page" style="max-width: 714px; margin: 0 auto; background: white; page-break-before: always; padding-top: 40px;">
 <div style="text-align: center; margin-bottom: 30px;">
 <h1 style="font-size: 24px; font-weight: bold; color: #1e293b; margin: 0;">福祉用具レンタル搬入完了書（続き）</h1>
 </div>
