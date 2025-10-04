@@ -1740,18 +1740,22 @@ elements.printBtn.textContent = '生成中...';
 const printContent = createPrintHTML();
 
 // 印刷用の要素を一時的にDOMに追加
-const printElement = document.createElement('div');
-printElement.innerHTML = printContent;
-printElement.style.position = 'absolute';
-printElement.style.left = '-9999px';
-printElement.style.top = '0';
-printElement.style.width = '794px'; // A4サイズの幅（px）
-printElement.style.backgroundColor = 'white';
-printElement.style.padding = '40px';
-printElement.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-document.body.appendChild(printElement);
+    const printElement = document.createElement('div');
+    printElement.innerHTML = printContent;
+    printElement.style.position = 'absolute';
+    printElement.style.left = '-9999px';
+    printElement.style.top = '0';
+    printElement.style.width = '794px'; // A4サイズの幅（px）
+    printElement.style.backgroundColor = 'white';
+    printElement.style.padding = '40px';
+    printElement.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    document.body.appendChild(printElement);
 
-// html2canvasで画像に変換
+    // DOMのレンダリングを待つ
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // html2canvasで画像に変換
+
 const canvas = await html2canvas(printElement, {
   scale: 1.5, // 解像度を下げて容量削減（2 → 1.5）
   useCORS: true,
@@ -1952,7 +1956,7 @@ page1HTML += `</div>`;
 let page2HTML = '';
 if (needsSecondPage) {
 page2HTML = `
-<div class="pdf-page" style="max-width: 714px; margin: 0 auto; background: white; page-break-before: always; padding-top: 40px;">
+<div class="pdf-page" style="max-width: 714px; margin: 0 auto; background: white; margin-top: 100px;">
 <div style="text-align: center; margin-bottom: 30px;">
 <h1 style="font-size: 24px; font-weight: bold; color: #1e293b; margin: 0;">福祉用具レンタル搬入完了書（続き）</h1>
 </div>
