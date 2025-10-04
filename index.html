@@ -1753,13 +1753,13 @@ document.body.appendChild(printElement);
 
 // html2canvasで画像に変換
 const canvas = await html2canvas(printElement, {
-scale: 1.5, // 解像度を下げて容量削減（2 → 1.5）
-useCORS: true,
-backgroundColor: '#ffffff',
-width: 794,
-height: 1123, // A4サイズの高さ（px）
-allowTaint: true,
-logging: false // ログ出力を無効化してパフォーマンス向上
+  scale: 1.5, // 解像度を下げて容量削減（2 → 1.5）
+  useCORS: true,
+  backgroundColor: '#ffffff',
+  width: 794,
+  // height: 1123 の行を削除（コンテンツの高さに自動調整）
+  allowTaint: true,
+  logging: false // ログ出力を無効化してパフォーマンス向上
 });
 
 // 一時的な要素を削除
@@ -1801,12 +1801,12 @@ pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDI
 heightLeft -= pageHeight;
 position -= pageHeight;
 
-// 残りの高さが10mm以上ある場合のみ追加ページを作成
-while (heightLeft > 10) {
-pdf.addPage();
-pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
-heightLeft -= pageHeight;
-position -= pageHeight;
+// 残りの高さがある場合は追加ページを作成
+while (heightLeft > 0) {  // ← 10 を 0 に変更
+  pdf.addPage();
+  pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'MEDIUM');
+  heightLeft -= pageHeight;
+  position -= pageHeight;
 }
 
 // ファイル名生成
