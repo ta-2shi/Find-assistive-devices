@@ -155,9 +155,9 @@ margin-bottom: 20px;
 
 .favorite-btn {
 width: 100%;
-background: linear-gradient(45deg, #ec4899, #db2777);
-color: white;
-border: none;
+background: white;
+color: #ec4899;
+border: 2px solid #ec4899;
 padding: 14px 20px;
 border-radius: 12px;
 cursor: pointer;
@@ -165,6 +165,12 @@ font-weight: 600;
 font-size: 15px;
 transition: all 0.3s ease;
 box-shadow: 0 4px 16px rgba(236, 72, 153, 0.2);
+}
+
+.favorite-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 20px rgba(236, 72, 153, 0.3);
+background: #fdf2f8;
 }
 
 .favorite-btn:hover {
@@ -1112,7 +1118,7 @@ Excelファイルをアップロード
 
 <div class="favorite-section">
 <button class="favorite-btn" id="favoriteBtn">
-♡ よく使用する商品
+よく使用する商品
 </button>
 </div>
 </div>
@@ -1796,8 +1802,10 @@ showError('お気に入り設定の更新に失敗しました');
 function showFavorites() {
 isFavoriteMode = true;
 selectedCategory = 'all';
-elements.favoriteBtn.style.background = 'linear-gradient(45deg, #dc2626, #991b1b)';
-elements.favoriteBtn.textContent = '♥ よく使用する商品 (表示中)';
+elements.favoriteBtn.style.background = 'linear-gradient(45deg, #ec4899, #db2777)';
+elements.favoriteBtn.style.color = 'white';
+elements.favoriteBtn.style.borderColor = '#ec4899';
+elements.favoriteBtn.textContent = 'よく使用する商品 (表示中)';
 elements.searchInput.value = '';
 toggleClearButton('');
     
@@ -1809,8 +1817,10 @@ displaySearchResults(filteredItems);
 function showAllItems() {
 isFavoriteMode = false;
 selectedCategory = 'all';
-elements.favoriteBtn.style.background = 'linear-gradient(45deg, #ec4899, #db2777)';
-elements.favoriteBtn.textContent = '♡ よく使用する商品';
+elements.favoriteBtn.style.background = 'white';
+elements.favoriteBtn.style.color = '#ec4899';
+elements.favoriteBtn.style.borderColor = '#ec4899';
+elements.favoriteBtn.textContent = 'よく使用する商品';
 showEmptySearchState();
 }
 
