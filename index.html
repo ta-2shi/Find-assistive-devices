@@ -705,6 +705,36 @@ transition: all 0.3s ease;
 transform: scale(1.1);
 }
 
+.remarks-section {
+margin-bottom: 16px;
+}
+
+.remarks-label {
+font-size: 14px;
+font-weight: 600;
+color: #374151;
+margin-bottom: 8px;
+display: block;
+}
+
+.remarks-textarea {
+width: 100%;
+min-height: 80px;
+padding: 12px;
+border: 2px solid #e5e7eb;
+border-radius: 8px;
+font-size: 14px;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+resize: vertical;
+transition: all 0.3s ease;
+}
+
+.remarks-textarea:focus {
+outline: none;
+border-color: #2563eb;
+box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
 .clear-btn {
 width: 100%;
 background: #6b7280;
@@ -1040,6 +1070,10 @@ Excelファイルをアップロード
 <p>選択された品目がここに表示されます</p>
 </div>
 </div>
+<div class="remarks-section">
+<label class="remarks-label" for="remarksInput">備考</label>
+<textarea class="remarks-textarea" id="remarksInput" placeholder="備考を入力してください..."></textarea>
+</div>
 <button class="clear-btn" id="clearAll">全て削除</button>
 </div>
 </div>
@@ -1083,7 +1117,8 @@ closeCalculatorBtn: document.getElementById('closeCalculator'),
 printBtn: document.getElementById('printBtn'),
 actualCostTotalElement: document.getElementById('actualCostTotal'),
 mobileCountSpan: document.getElementById('mobileCount'),
-reorderModeBtn: document.getElementById('reorderModeBtn')
+reorderModeBtn: document.getElementById('reorderModeBtn'),
+remarksInput: document.getElementById('remarksInput')
 };
 
 // Firebase データベース操作
@@ -1203,6 +1238,7 @@ await loadEquipmentData();
 await updateDatabaseCount(); // 件数を表示
 showEmptySearchState();
 loadSelectedItems();
+loadRemarks();
 } catch (error) {
 showError('データベース接続エラーが発生しました。');
 }
@@ -1252,6 +1288,30 @@ sessionStorage.setItem('selectedWelfareItems', JSON.stringify(selectedItems));
 console.error('選択アイテム保存エラー:', error);
 }
 }
+
+// 備考の保存
+function saveRemarks() {
+try {
+sessionStorage.setItem('remarksText', elements.remarksInput.value);
+} catch (error) {
+console.error('備考保存エラー:', error);
+}
+}
+
+// 備考の読み込み
+function loadRemarks() {
+try {
+const saved = sessionStorage.getItem('remarksText');
+if (saved) {
+elements.remarksInput.value = saved;
+}
+} catch (error) {
+console.error('備考読み込みエラー:', error);
+}
+}
+
+// 備考入力時の自動保存
+elements.remarksInput.addEventListener('input', saveRemarks);
 
 // モード切り替え
 elements.userModeBtn.addEventListener('click', () => switchMode(false));
@@ -1974,9 +2034,22 @@ ${actualCostLabel}
 }).join('');
 }
 
+// 備考欄の取得
+const remarks = elements.remarksInput.value.trim();
+const remarksHTML = remarks ? `
+<div style="margin-bottom: 20px;">
+<div style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px;">備考</div>
+<div style="padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; color: #374151; white-space: pre-wrap; line-height: 1.6;">${remarks}</div>
+</div>
+` : '';
+
 // 署名欄と文言のHTML
 const signatureAndFooter = `
-<div style="text-align: right; margin-top: 20px; padding-top: 20px; border-top: 2px solid #374151;">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px; padding-top: 20px; border-top: 2px solid #374151;">
+<div style="flex: 1; margin-right: 20px;">
+${remarksHTML}
+</div>
+<div style="text-align: right;">
 <div style="font-size: 18px; font-weight: bold; color: #1e293b; margin-bottom: 30px;">
 総合計: ${totalAmount.toLocaleString()}円
 </div>
@@ -1994,6 +2067,8 @@ const signatureAndFooter = `
 <div>この度、搬入させていただいた福祉用具の種別、及び点数の内訳を記載させていただきました。</div>
 <div>尚、ご不明な点がございましたら、大変お手数かとは存じますがご連絡の程、よろしくお願い申し上げます。</div>
 <div>※負担額は利用付の負担割合により異なります。</div>
+</div>
+</div>
 </div>
 `;
 
