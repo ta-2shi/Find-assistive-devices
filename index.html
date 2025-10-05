@@ -1868,6 +1868,8 @@ saveSelectedItems();
 // 全削除
 elements.clearAllBtn.addEventListener('click', () => {
 selectedItems = [];
+elements.remarksInput.value = '';
+saveRemarks();
 updateCalculator();
 updateMobileCount();
 saveSelectedItems();
