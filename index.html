@@ -149,6 +149,81 @@ color: #374151;
 transform: translateY(-50%) scale(1.1);
 }
 
+.favorite-section {
+margin-bottom: 20px;
+}
+
+.favorite-btn {
+width: 100%;
+background: linear-gradient(45deg, #ec4899, #db2777);
+color: white;
+border: none;
+padding: 14px 20px;
+border-radius: 12px;
+cursor: pointer;
+font-weight: 600;
+font-size: 15px;
+transition: all 0.3s ease;
+box-shadow: 0 4px 16px rgba(236, 72, 153, 0.2);
+}
+
+.favorite-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 20px rgba(236, 72, 153, 0.3);
+}
+
+.favorite-btn:active {
+transform: translateY(0);
+}
+
+.category-filters {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+margin-bottom: 16px;
+padding: 12px;
+background: rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+}
+
+.category-filter-btn {
+background: rgba(255, 255, 255, 0.8);
+color: #374151;
+border: 2px solid transparent;
+padding: 8px 16px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+font-size: 13px;
+transition: all 0.3s ease;
+}
+
+.category-filter-btn:hover {
+background: white;
+transform: translateY(-1px);
+}
+
+.category-filter-btn.active {
+background: linear-gradient(45deg, #ec4899, #db2777);
+color: white;
+border-color: #ec4899;
+}
+
+.favorite-icon {
+cursor: pointer;
+font-size: 18px;
+transition: all 0.2s ease;
+user-select: none;
+}
+
+.favorite-icon:hover {
+transform: scale(1.2);
+}
+
+.favorite-icon.active {
+color: #ec4899;
+}
+
 .admin-panel {
 display: none;
 background: rgba(255, 255, 255, 0.1);
@@ -1034,6 +1109,12 @@ Excelファイルをアップロード
 <input type="text" class="search-input" id="searchInput" placeholder="福祉用具を検索...">
 <button class="search-clear-btn" id="searchClearBtn">×</button>
 </div>
+
+<div class="favorite-section">
+<button class="favorite-btn" id="favoriteBtn">
+♡ よく使用する商品
+</button>
+</div>
 </div>
 
 <button class="mobile-toggle" id="toggleCalculator">
@@ -1089,6 +1170,8 @@ let selectedItems = [];
 let filteredItems = [];
 let isAdminMode = false;
 let isReorderMode = false;
+let isFavoriteMode = false;
+let selectedCategory = 'all';
 
 // DOM要素
 const elements = {
@@ -1118,7 +1201,8 @@ printBtn: document.getElementById('printBtn'),
 actualCostTotalElement: document.getElementById('actualCostTotal'),
 mobileCountSpan: document.getElementById('mobileCount'),
 reorderModeBtn: document.getElementById('reorderModeBtn'),
-remarksInput: document.getElementById('remarksInput')
+remarksInput: document.getElementById('remarksInput'),
+favoriteBtn: document.getElementById('favoriteBtn')
 };
 
 // Firebase データベース操作
@@ -1165,7 +1249,8 @@ name: name.trim(),
 points: parseInt(points),
 category: category.trim(),
 taisCode: taisCode.trim(),
-isActualCost: false, // 実費フラグを追加
+isActualCost: false,
+isFavorite: false,
 createdAt: new Date()
 }
 );
@@ -1176,7 +1261,7 @@ throw error;
 }
 },
 
-async updateEquipment(id, name, points, category = '', taisCode = '', isActualCost = false) {
+async updateEquipment(id, name, points, category = '', taisCode = '', isActualCost = false, isFavorite = false) {
 try {
 await window.firestore.updateDoc(
 window.firestore.doc(window.db, 'welfare_equipment', id),
@@ -1186,6 +1271,7 @@ points: parseInt(points),
 category: category.trim(),
 taisCode: taisCode.trim(),
 isActualCost: isActualCost,
+isFavorite: isFavorite,
 updatedAt: new Date()
 }
 );
@@ -1485,6 +1571,9 @@ showError('データの追加に失敗しました');
 elements.searchInput.addEventListener('input', (e) => {
 const query = e.target.value.trim();
 toggleClearButton(query);
+if (isFavoriteMode) {
+showAllItems();
+}
 if (query === '') {
 showEmptySearchState();
 } else {
@@ -1523,17 +1612,35 @@ displaySearchResults(filteredItems);
 }
 
 function displaySearchResults(items) {
+// お気に入りモードの場合、品目フィルターを表示
+if (isFavoriteMode) {
+const categories = ['all', ...new Set(items.map(item => item.category).filter(c => c))];
+const categoryFiltersHTML = `
+<div class="category-filters">
+${categories.map(cat => `
+<button class="category-filter-btn ${selectedCategory === cat ? 'active' : ''}" onclick="filterByCategory('${cat}')">
+${cat === 'all' ? '全て' : cat}
+</button>
+`).join('')}
+</div>
+`;
+    
+// 品目フィルター適用
+if (selectedCategory !== 'all') {
+items = items.filter(item => item.category === selectedCategory);
+}
+    
 if (items.length === 0) {
-elements.searchResults.innerHTML = `
+elements.searchResults.innerHTML = categoryFiltersHTML + `
 <div class="empty-state">
 <h3>該当する品目が見つかりません</h3>
-<p>別のキーワードで検索してみてください</p>
+<p>別の品目を選択してみてください</p>
 </div>
 `;
 return;
 }
-
-elements.searchResults.innerHTML = items.map(item => {
+    
+elements.searchResults.innerHTML = categoryFiltersHTML + items.map(item => {
 const selectedItem = selectedItems.find(selected => selected.id === item.id);
 const isSelected = !!selectedItem;
 const quantity = selectedItem ? selectedItem.quantity : 0;
@@ -1550,6 +1657,56 @@ return `
 <div class="result-item">
 <div class="item-info">
 <div class="item-name">${item.name}</div>
+<div class="item-points">${item.points}点/月</div>
+${categoryDisplay}
+${taisCodeDisplay}
+</div>
+<div class="item-actions">
+<button class="add-btn" onclick="addItem('${item.id}')">
+${isSelected ? `追加済み (${quantity}個)` : '追加'}
+</button>
+${adminButtons}
+</div>
+</div>
+`;
+}).join('');
+return;
+}
+
+// 通常モード
+if (items.length === 0) {
+elements.searchResults.innerHTML = `
+<div class="empty-state">
+<h3>該当する品目が見つかりません</h3>
+<p>別のキーワードで検索してみてください</p>
+</div>
+`;
+return;
+}
+
+elements.searchResults.innerHTML = items.map(item => {
+const selectedItem = selectedItems.find(selected => selected.id === item.id);
+const isSelected = !!selectedItem;
+const quantity = selectedItem ? selectedItem.quantity : 0;
+
+const favoriteIcon = isAdminMode ? `
+<span class="favorite-icon ${item.isFavorite ? 'active' : ''}" onclick="toggleFavorite('${item.id}')" title="お気に入り">
+${item.isFavorite ? '♥' : '♡'}
+</span>
+` : '';
+
+const adminButtons = isAdminMode ? `
+<button class="edit-btn" onclick="editItem('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.points}, '${(item.category || '').replace(/'/g, "\\'")}', '${(item.taisCode || '').replace(/'/g, "\\'")}')">編集</button>
+<button class="delete-btn" onclick="deleteItem('${item.id}', '${item.name.replace(/'/g, "\\'")}')">削除</button>
+` : '';
+
+const categoryDisplay = item.category ? `<div class="item-category">品目: ${item.category}</div>` : '';
+const taisCodeDisplay = item.taisCode ? `<div class="item-tais-code">taisコード: ${item.taisCode}</div>` : '';
+
+return `
+<div class="result-item">
+<div class="item-info">
+<div class="item-name">${favoriteIcon} ${item.name}</div>
 <div class="item-points">${item.points}点/月</div>
 ${categoryDisplay}
 ${taisCodeDisplay}
@@ -1608,6 +1765,62 @@ saveSelectedItems();
 displaySearchResults(filteredItems);
 }
 
+// お気に入りトグル
+async function toggleFavorite(itemId) {
+const item = welfareEquipment.find(item => item.id === itemId);
+if (!item) return;
+
+const newFavoriteState = !item.isFavorite;
+
+try {
+showInfo('お気に入り設定を更新中...');
+await FirebaseDB.updateEquipment(
+item.id,
+item.name,
+item.points,
+item.category,
+item.taisCode,
+item.isActualCost,
+newFavoriteState
+);
+await loadEquipmentData();
+performSearch(elements.searchInput.value);
+showSuccess(`"${item.name}" のお気に入り設定を${newFavoriteState ? 'ON' : 'OFF'}にしました`);
+} catch (error) {
+console.error('お気に入り設定更新エラー:', error);
+showError('お気に入り設定の更新に失敗しました');
+}
+}
+
+// お気に入り商品表示
+function showFavorites() {
+isFavoriteMode = true;
+selectedCategory = 'all';
+elements.favoriteBtn.style.background = 'linear-gradient(45deg, #dc2626, #991b1b)';
+elements.favoriteBtn.textContent = '♥ よく使用する商品 (表示中)';
+elements.searchInput.value = '';
+toggleClearButton('');
+    
+filteredItems = welfareEquipment.filter(item => item.isFavorite);
+displaySearchResults(filteredItems);
+}
+
+// 通常表示に戻る
+function showAllItems() {
+isFavoriteMode = false;
+selectedCategory = 'all';
+elements.favoriteBtn.style.background = 'linear-gradient(45deg, #ec4899, #db2777)';
+elements.favoriteBtn.textContent = '♡ よく使用する商品';
+showEmptySearchState();
+}
+
+// 品目フィルター
+function filterByCategory(category) {
+selectedCategory = category;
+const favoriteItems = welfareEquipment.filter(item => item.isFavorite);
+displaySearchResults(favoriteItems);
+}
+
 function removeItem(itemId) {
 selectedItems = selectedItems.filter(item => item.id !== itemId);
 updateCalculator();
@@ -1644,6 +1857,9 @@ showError('実費設定の更新に失敗しました');
 }
 
 async function editItem(id, currentName, currentPoints, currentCategory = '', currentTaisCode = '', currentActualCost = false) {
+const item = welfareEquipment.find(item => item.id === id);
+const currentFavorite = item ? item.isFavorite : false;
+
 const newName = prompt('商品名を編集:', currentName);
 if (!newName || newName.trim() === '') return;
 
@@ -1661,7 +1877,7 @@ const actualCostConfirm = confirm(`実費対象として設定しますか？\n�
 
 try {
 showInfo('データを更新中...');
-await FirebaseDB.updateEquipment(id, newName.trim(), points, category, taisCode, actualCostConfirm);
+await FirebaseDB.updateEquipment(id, newName.trim(), points, category, taisCode, actualCostConfirm, currentFavorite);
 await loadEquipmentData();
 await updateDatabaseCount();
 performSearch(elements.searchInput.value);
@@ -1885,6 +2101,15 @@ elements.closeCalculatorBtn.style.display = 'block';
 elements.closeCalculatorBtn.addEventListener('click', () => {
 elements.calculator.classList.remove('show');
 elements.closeCalculatorBtn.style.display = 'none';
+});
+
+// お気に入りボタン
+elements.favoriteBtn.addEventListener('click', () => {
+if (isFavoriteMode) {
+showAllItems();
+} else {
+showFavorites();
+}
 });
 
 // PDF印刷機能
