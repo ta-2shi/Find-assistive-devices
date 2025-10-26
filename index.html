@@ -2212,12 +2212,18 @@ const currentDate = new Date().toLocaleDateString('ja-JP');
 // 通常の点数計算（実費以外）
 const normalPoints = selectedItems
 .filter(item => !item.isActualCost)
-.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+.reduce((sum, item) => {
+const itemTotal = item.points * item.quantity;
+return sum + (item.isHalfMonth ? itemTotal / 2 : itemTotal);
+}, 0);
 
 // 実費の合計計算
 const actualCostTotal = selectedItems
 .filter(item => item.isActualCost)
-.reduce((sum, item) => sum + (item.points * item.quantity), 0);
+.reduce((sum, item) => {
+const itemTotal = item.points * item.quantity;
+return sum + (item.isHalfMonth ? itemTotal / 2 : itemTotal);
+}, 0);
 
 // 総合計（円単位）
 const totalAmount = actualCostTotal + normalPoints;
