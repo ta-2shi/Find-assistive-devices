@@ -2178,8 +2178,8 @@ ${actualCostDisplay}
 `;
 }).join('');
 
-// 合計表示を追加
-const totalAmount = actualCostTotal + normalPoints;
+// 合計表示を追加（負担割合を適用した金額）
+const totalAmount = (normalPoints * burdenRate) + actualCostTotal;
 let summaryHTML = '<div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">';
 summaryHTML += '<div style="text-align: center; font-weight: 600; margin-bottom: 10px; color: #374151;">合計</div>';
 summaryHTML += `<div style="text-align: center; font-size: 18px; font-weight: 700; color: #1e293b;">`;
