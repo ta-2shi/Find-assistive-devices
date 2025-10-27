@@ -2542,6 +2542,9 @@ const remarksHTML = remarks ? `
 </div>
 ` : '';
 
+// 負担割合の表示
+const burdenRateText = burdenRate === 1 ? '1割負担' : burdenRate === 2 ? '2割負担' : '3割負担';
+
 // 署名欄と文言のHTML
 const signatureAndFooter = `
 <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #374151;">
@@ -2551,10 +2554,11 @@ ${remarksHTML}
 <div style="font-size: 8px; color: #9ca3af; line-height: 1.5;">
 <div>この度、搬入させていただいた福祉用具の種別、及び点数の内訳を記載させていただきました。</div>
 <div>尚、ご不明な点がございましたら、大変お手数かとは存じますがご連絡の程、よろしくお願い申し上げます。</div>
-<div>※負担額は利用月の負担割合により異なります。</div>
+<div>※負担額は利用付の負担割合により異なります。</div>
 </div>
 </div>
 <div style="text-align: right;">
+<div style="font-size: 14px; font-weight: 600; color: #2563eb; margin-bottom: 10px;">${burdenRateText}</div>
 <div style="font-size: 18px; font-weight: bold; color: #1e293b; margin-bottom: 30px;">
 総合計: ${totalAmount.toLocaleString()}円
 </div>
