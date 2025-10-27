@@ -2134,6 +2134,10 @@ showError('データの削除に失敗しました');
 
 // 計算機更新
 function updateCalculator() {
+console.log('=== updateCalculator 実行 ===');
+console.log('selectedItems:', selectedItems);
+console.log('selectedItems.length:', selectedItems.length);
+
 // 通常の点数計算（実費以外）
 const normalPoints = selectedItems
 .filter(item => !item.isActualCost)
@@ -2206,6 +2210,10 @@ ${actualCostDisplay}
 
 // 合計表示を追加（負担割合対応版）
 const totalAmount = actualCostTotal + normalPoints;
+console.log('totalAmount:', totalAmount);
+console.log('normalPoints:', normalPoints);
+console.log('actualCostTotal:', actualCostTotal);
+console.log('currentBurdenRatio:', currentBurdenRatio);
 
 // 負担割合に応じた計算
 const burdenAdjustedPoints = normalPoints * currentBurdenRatio / 10;
@@ -2260,7 +2268,9 @@ let summaryHTML = `
 </div>
 `;
 
+console.log('summaryHTML:', summaryHTML);
 elements.selectedItemsContainer.innerHTML += summaryHTML;
+console.log('HTML挿入完了。elements.selectedItemsContainer.innerHTML:', elements.selectedItemsContainer.innerHTML);
 
 // ドラッグ&ドロップのイベントリスナーを追加
 setupDragAndDrop();
