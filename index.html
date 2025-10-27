@@ -1297,10 +1297,6 @@ Excelファイルをアップロード
 <span>Wellstock ロゴ</span>
 <img src="data:image/png;base64,WELLSTOCK_LOGO_BASE64" alt="Wellstock" class="logo-preview" id="wellstockPreview">
 </label>
-<label class="logo-option" id="logoOptionNone">
-<input type="radio" name="logo" value="none">
-<span>ロゴなし</span>
-</label>
 </div>
 <div class="logo-modal-buttons">
 <button class="logo-modal-btn logo-cancel-btn" id="logoCancelBtn">キャンセル</button>
@@ -1365,8 +1361,7 @@ logoModal: document.getElementById('logoModal'),
 logoCancelBtn: document.getElementById('logoCancelBtn'),
 logoPrintBtn: document.getElementById('logoPrintBtn'),
 logoOptionNextus: document.getElementById('logoOptionNextus'),
-logoOptionWellstock: document.getElementById('logoOptionWellstock'),
-logoOptionNone: document.getElementById('logoOptionNone')
+logoOptionWellstock: document.getElementById('logoOptionWellstock')
 };
 
 // Firebase データベース操作
@@ -2523,7 +2518,7 @@ ${remarksHTML}
 `;
 
 // ロゴHTML
-const logoHTML = selectedLogo !== 'none' && logoData[selectedLogo] ? `
+const logoHTML = logoData[selectedLogo] ? `
 <img src="${logoData[selectedLogo]}" alt="Company Logo" style="max-width: 200px; max-height: 80px; object-fit: contain;">
 ` : '';
 
