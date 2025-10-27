@@ -2478,8 +2478,8 @@ const itemTotal = item.points * item.quantity;
 return sum + (item.isHalfMonth ? itemTotal / 2 : itemTotal);
 }, 0);
 
-// 総合計（円単位）
-const totalAmount = actualCostTotal + normalPoints;
+// 総合計（負担割合を適用）
+const totalAmount = (normalPoints * burdenRate) + actualCostTotal;
 
 // 右上の合計表示（点数と実費を分けて表示）
 let topSummaryHTML = '';
