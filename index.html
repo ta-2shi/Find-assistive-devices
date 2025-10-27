@@ -31,10 +31,7 @@
   // グローバルスコープに公開
   window.db = db;
   window.firestore = { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch };
-
-// 現在の負担割合（1=1割、2=2割、3=3割）
 let currentBurdenRatio = 1;
-
 </script>
 
 <style>
@@ -2273,8 +2270,8 @@ setupDragAndDrop();
 
 // 負担割合を変更する関数
 function setBurdenRatio(ratio) {
-currentBurdenRatio = ratio;
-updateCalculator();
+  currentBurdenRatio = ratio;
+  updateCalculator();
 }
 
 function updateMobileCount() {
