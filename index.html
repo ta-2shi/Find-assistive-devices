@@ -31,10 +31,6 @@
   // グローバルスコープに公開
   window.db = db;
   window.firestore = { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch };
-
-// 現在の負担割合（1=1割、2=2割、3=3割）
-let currentBurdenRatio = 1;
-
 </script>
 
 <style>
@@ -1167,65 +1163,6 @@ animation: spin 1s linear infinite;
     font-size: 12px;
   }
 }
-
-/* 負担割合ボタングループ */
-.burden-ratio-buttons {
-display: flex;
-gap: 8px;
-margin-top: 8px;
-}
-
-.burden-ratio-btn {
-background: #e5e7eb;
-color: #374151;
-border: 2px solid #e5e7eb;
-padding: 8px 16px;
-border-radius: 8px;
-cursor: pointer;
-font-weight: 600;
-font-size: 14px;
-transition: all 0.3s ease;
-min-width: 60px;
-}
-
-.burden-ratio-btn:hover {
-background: #d1d5db;
-border-color: #9ca3af;
-}
-
-.burden-ratio-btn.active {
-background: linear-gradient(45deg, #2563eb, #1d4ed8);
-color: white;
-border-color: #2563eb;
-box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-.burden-ratio-btn:disabled {
-background: #f3f4f6;
-color: #9ca3af;
-cursor: not-allowed;
-border-color: #e5e7eb;
-}
-
-/* 合計表示エリア */
-.burden-summary-container {
-margin-top: 20px;
-padding: 20px;
-background: rgba(255, 255, 255, 0.7);
-border-radius: 12px;
-border: 2px solid #e5e7eb;
-}
-
-.burden-ratio-display {
-margin-bottom: 16px;
-display: flex;
-flex-direction: column;
-}
-
-.burden-calculation-breakdown {
-margin-top: 12px;
-}
-
 </style>
 </head>
 <body>
@@ -2207,74 +2144,20 @@ ${actualCostDisplay}
 `;
 }).join('');
 
-// 合計表示を追加（負担割合対応版）
+// 合計表示を追加
 const totalAmount = actualCostTotal + normalPoints;
-
-// 負担割合に応じた計算
-const burdenAdjustedPoints = normalPoints * currentBurdenRatio / 10;
-const burdenAdjustedTotal = burdenAdjustedPoints + actualCostTotal;
-
-let summaryHTML = `
-<div class="burden-summary-container">
-  <div class="burden-ratio-display">
-    <span style="color: #6b7280; font-size: 13px; font-weight: 600;">負担割合:</span>
-    <div class="burden-ratio-buttons">
-      <button class="burden-ratio-btn ${currentBurdenRatio === 1 ? 'active' : ''}" onclick="setBurdenRatio(1)">1割</button>
-      <button class="burden-ratio-btn ${currentBurdenRatio === 2 ? 'active' : ''}" onclick="setBurdenRatio(2)">2割</button>
-      <button class="burden-ratio-btn ${currentBurdenRatio === 3 ? 'active' : ''}" onclick="setBurdenRatio(3)">3割</button>
-    </div>
-  </div>
-
-  <div class="burden-calculation-breakdown">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px;">
-      <div>
-        <div style="color: #6b7280; font-size: 12px; margin-bottom: 4px;">点数合計</div>
-        <div style="font-size: 16px; font-weight: 600; color: #2563eb;">${normalPoints.toLocaleString()}点</div>
-      </div>
-      <div>
-        <div style="color: #6b7280; font-size: 12px; margin-bottom: 4px;">実費合計</div>
-        <div style="font-size: 16px; font-weight: 600; color: #059669;">${actualCostTotal.toLocaleString()}円</div>
-      </div>
-    </div>
-
-    <div style="background: #f0f9ff; border-left: 4px solid #2563eb; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-      <div style="color: #6b7280; font-size: 12px; margin-bottom: 6px;">負担額計算</div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-        <div>
-          <span style="color: #6b7280; font-size: 11px;">点数部分:</span>
-          <div style="font-size: 13px; font-weight: 600; color: #1e293b;">
-            ${normalPoints.toLocaleString()}点 × ${currentBurdenRatio}割 = ${Math.round(burdenAdjustedPoints).toLocaleString()}円
-          </div>
-        </div>
-        <div>
-          <span style="color: #6b7280; font-size: 11px;">実費部分:</span>
-          <div style="font-size: 13px; font-weight: 600; color: #1e293b;">
-            ${actualCostTotal.toLocaleString()}円
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div style="background: linear-gradient(45deg, #2563eb, #1d4ed8); color: white; padding: 16px; border-radius: 12px; text-align: center;">
-      <div style="font-size: 12px; opacity: 0.9; margin-bottom: 6px;">負担額合計</div>
-      <div style="font-size: 24px; font-weight: 700;">${Math.round(burdenAdjustedTotal).toLocaleString()}円</div>
-    </div>
-  </div>
-</div>
-`;
+let summaryHTML = '<div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">';
+summaryHTML += '<div style="text-align: center; font-weight: 600; margin-bottom: 10px; color: #374151;">合計</div>';
+summaryHTML += `<div style="text-align: center; font-size: 18px; font-weight: 700; color: #1e293b;">`;
+summaryHTML += `${totalAmount.toLocaleString()}円`;
+summaryHTML += `</div>`;
+summaryHTML += '</div>';
 
 elements.selectedItemsContainer.innerHTML += summaryHTML;
 
 // ドラッグ&ドロップのイベントリスナーを追加
 setupDragAndDrop();
 }
-}
-
-
-// 負担割合を変更する関数
-function setBurdenRatio(ratio) {
-currentBurdenRatio = ratio;
-updateCalculator();
 }
 
 function updateMobileCount() {
