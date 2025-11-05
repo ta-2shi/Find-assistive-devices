@@ -2532,12 +2532,6 @@ ${actualCostLabel}
 
 // 備考欄の取得
 const remarks = elements.remarksInput.value.trim();
-const remarksHTML = remarks ? `
-<div style="margin-bottom: 20px;">
-<div style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px;">備考</div>
-<div style="padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; color: #374151; white-space: pre-wrap; line-height: 1.6;">${remarks}</div>
-</div>
-` : '';
 
 // 負担割合の表示
 const burdenRateText = burdenRate === 1 ? '1割負担' : burdenRate === 2 ? '2割負担' : '3割負担';
@@ -2545,9 +2539,14 @@ const burdenRateText = burdenRate === 1 ? '1割負担' : burdenRate === 2 ? '2�
 // 署名欄と文言のHTML
 const signatureAndFooter = `
 <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #374151;">
-${remarksHTML}
-<div style="display: flex; justify-content: space-between; align-items: flex-end;">
-<div style="flex: 1; margin-right: 20px;">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 30px;">
+<div style="flex: 1; max-width: 400px;">
+${remarks ? `
+<div style="margin-bottom: 20px;">
+<div style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px;">備考</div>
+<div style="padding: 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; color: #374151; white-space: pre-wrap; line-height: 1.6; min-height: 80px;">${remarks}</div>
+</div>
+` : ''}
 <div style="font-size: 8px; color: #9ca3af; line-height: 1.5;">
 <div>この度、搬入させていただいた福祉用具の種別、及び点数の内訳を記載させていただきました。</div>
 <div>尚、ご不明な点がございましたら、大変お手数かとは存じますがご連絡の程、よろしくお願い申し上げます。</div>
