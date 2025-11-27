@@ -2181,8 +2181,8 @@ summaryHTML += '</div>';
 summaryHTML += `
 <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
 <div class="remarks-section">
-<label class="remarks-label" for="homeNameInput">居宅名</label>
-<input type="text" class="remarks-textarea" id="homeNameInput" placeholder="居宅名を入力してください..." style="min-height: 40px; padding: 10px;">
+<label class="remarks-label" for="homeNameInput">事業所名</label>
+<input type="text" class="remarks-textarea" id="homeNameInput" placeholder="事業所名を入力してください..." style="min-height: 40px; padding: 10px;">
 </div>
 <div class="remarks-section">
 <label class="remarks-label" for="contractorNameInput">契約者名</label>
@@ -2613,7 +2613,7 @@ ${remarks ? `
 </div>
 `;
 
-// 居宅名と契約者名の取得
+// 事業所名と契約者名の取得
 const homeName = elements.homeNameInput.value.trim() || '＿＿＿＿＿＿＿＿＿＿＿＿';
 const contractorName = elements.contractorNameInput.value.trim() || '＿＿＿＿＿＿＿＿';
 
@@ -2634,7 +2634,7 @@ ${logoHTML}
 </div>
 
 <div style="margin-bottom: 30px; font-size: 14px; color: #374151; line-height: 1.8;">
-<div>居宅名　${homeName}　御中</div>
+<div>事業所名　${homeName}　御中</div>
 <div style="padding-left: 20px;">契約者　　${contractorName}　様</div>
 </div>
 
