@@ -859,6 +859,11 @@ transition: all 0.3s ease;
 
 .clear-btn:hover {
 background: #4b5563;
+transform: translateY(-1px);
+}
+
+.clear-btn:active {
+transform: translateY(0);
 }
 
 .empty-state {
@@ -1293,8 +1298,8 @@ Excelファイルをアップロード
 <button class="reorder-mode-btn" id="reorderModeBtn">
 並び替え
 </button>
-<button class="print-btn" id="printBtn">
-📄 印刷
+<button class="clear-btn" id="clearAllTop" style="width: auto; padding: 8px 16px; font-size: 14px;">
+全て削除
 </button>
 </div>
 <div style="display: flex; align-items: center;">
@@ -1307,7 +1312,9 @@ Excelファイルをアップロード
 <p>選択された品目がここに表示されます</p>
 </div>
 </div>
-<button class="clear-btn" id="clearAll">全て削除</button>
+<button class="print-btn" id="printBtn" style="width: 100%; padding: 12px; font-size: 14px;">
+📄 印刷
+</button>
 </div>
 </div>
 </div>
@@ -1379,6 +1386,7 @@ toggleCalculatorBtn: document.getElementById('toggleCalculator'),
 calculator: document.getElementById('calculator'),
 closeCalculatorBtn: document.getElementById('closeCalculator'),
 printBtn: document.getElementById('printBtn'),
+clearAllTop: document.getElementById('clearAllTop'),
 actualCostTotalElement: document.getElementById('actualCostTotal'),
 mobileCountSpan: document.getElementById('mobileCount'),
 reorderModeBtn: document.getElementById('reorderModeBtn'),
@@ -2318,18 +2326,28 @@ updateMobileCount();
 saveSelectedItems();
 }
 
-// 全削除
-elements.clearAllBtn.addEventListener('click', () => {
+// 全削除（確認ポップアップ付き）
+function handleClearAll() {
+if (selectedItems.length === 0) {
+alert('削除する品目がありません。');
+return;
+}
+  
+if (confirm('選択した品目、事業所名、契約者名、備考をすべて削除しますか？\nこの操作は取り消せません。')) {
 selectedItems = [];
-elements.homeNameInput.value = '';
-elements.contractorNameInput.value = '';
-elements.remarksInput.value = '';
-saveRemarks();
+// 入力欄は動的に生成されるため、sessionStorageをクリア
+sessionStorage.removeItem('homeName');
+sessionStorage.removeItem('contractorName');
+sessionStorage.removeItem('remarksText');
 updateCalculator();
 updateMobileCount();
 saveSelectedItems();
 displaySearchResults(filteredItems);
-});
+}
+}
+
+// 上部の全削除ボタン
+elements.clearAllTop.addEventListener('click', handleClearAll);
 
 // モバイル表示切り替え
 elements.toggleCalculatorBtn.addEventListener('click', () => {
