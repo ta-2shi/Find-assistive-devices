@@ -1585,11 +1585,8 @@ function loadRemarks() {
 // 値の復元はupdateCalculator内で行う
 }
 
-// 入力時の自動保存
-elements.remarksInput.addEventListener('input', saveRemarks);
-elements.homeNameInput.addEventListener('input', saveRemarks);
-elements.contractorNameInput.addEventListener('input', saveRemarks);
-
+// 入力時の自動保存（動的に生成される要素にはupdateCalculator内で設定済み）
+  
 // モード切り替え
 elements.userModeBtn.addEventListener('click', () => switchMode(false));
 elements.adminModeBtn.addEventListener('click', () => switchMode(true));
