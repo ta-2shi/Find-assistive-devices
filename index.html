@@ -1579,24 +1579,10 @@ console.error('備考保存エラー:', error);
 }
 }
 
-// 備考の読み込み
+// 備考の読み込み（初期化時は何もしない）
 function loadRemarks() {
-try {
-const savedRemarks = sessionStorage.getItem('remarksText');
-const savedHomeName = sessionStorage.getItem('homeName');
-const savedContractorName = sessionStorage.getItem('contractorName');
-if (savedRemarks) {
-elements.remarksInput.value = savedRemarks;
-}
-if (savedHomeName) {
-elements.homeNameInput.value = savedHomeName;
-}
-if (savedContractorName) {
-elements.contractorNameInput.value = savedContractorName;
-}
-} catch (error) {
-console.error('備考読み込みエラー:', error);
-}
+// 入力欄は動的に生成されるため、ここでは何もしない
+// 値の復元はupdateCalculator内で行う
 }
 
 // 入力時の自動保存
