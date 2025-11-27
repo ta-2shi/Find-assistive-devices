@@ -2546,7 +2546,7 @@ return items.map((item, index) => {
 const fullTotal = item.points * item.quantity;
 const displayTotal = item.isHalfMonth ? fullTotal / 2 : fullTotal;
 const categoryDisplay = item.category ? item.category : '';
-const taisDisplay = item.taisCode ? `<div style="color: #d97706; font-size: 12px; margin-top: 5px;">taisコード: ${item.taisCode}</div>` : '';
+const taisDisplay = (!item.isActualCost && item.taisCode) ? `<div style="color: #d97706; font-size: 12px; margin-top: 5px;">taisコード: ${item.taisCode}</div>` : '';
 const actualCostLabel = item.isActualCost ? `<div style="color: #dc2626; font-size: 11px; font-weight: 600; margin-top: 3px;">実費対象</div>` : '';
 const halfMonthLabel = item.isHalfMonth ? ' <span style="color: #f59e0b; font-weight: 600;">(半月)</span>' : '';
 const unit = item.isActualCost ? '円' : '点';
