@@ -1308,6 +1308,14 @@ Excelファイルをアップロード
 </div>
 </div>
 <div class="remarks-section">
+<label class="remarks-label" for="homeNameInput">居宅名</label>
+<input type="text" class="remarks-textarea" id="homeNameInput" placeholder="居宅名を入力してください..." style="min-height: 40px; padding: 10px;">
+</div>
+<div class="remarks-section">
+<label class="remarks-label" for="contractorNameInput">契約者名</label>
+<input type="text" class="remarks-textarea" id="contractorNameInput" placeholder="契約者名を入力してください..." style="min-height: 40px; padding: 10px;">
+</div>
+<div class="remarks-section">
 <label class="remarks-label" for="remarksInput">備考</label>
 <textarea class="remarks-textarea" id="remarksInput" placeholder="備考を入力してください..."></textarea>
 </div>
@@ -1386,6 +1394,8 @@ printBtn: document.getElementById('printBtn'),
 actualCostTotalElement: document.getElementById('actualCostTotal'),
 mobileCountSpan: document.getElementById('mobileCount'),
 reorderModeBtn: document.getElementById('reorderModeBtn'),
+homeNameInput: document.getElementById('homeNameInput'),
+contractorNameInput: document.getElementById('contractorNameInput'),
 remarksInput: document.getElementById('remarksInput'),
 favoriteBtn: document.getElementById('favoriteBtn'),
 mobileFavoriteBtn: document.getElementById('mobileFavoriteBtn'),
@@ -1574,6 +1584,8 @@ console.error('選択アイテム保存エラー:', error);
 function saveRemarks() {
 try {
 sessionStorage.setItem('remarksText', elements.remarksInput.value);
+sessionStorage.setItem('homeName', elements.homeNameInput.value);
+sessionStorage.setItem('contractorName', elements.contractorNameInput.value);
 } catch (error) {
 console.error('備考保存エラー:', error);
 }
@@ -1582,17 +1594,27 @@ console.error('備考保存エラー:', error);
 // 備考の読み込み
 function loadRemarks() {
 try {
-const saved = sessionStorage.getItem('remarksText');
-if (saved) {
-elements.remarksInput.value = saved;
+const savedRemarks = sessionStorage.getItem('remarksText');
+const savedHomeName = sessionStorage.getItem('homeName');
+const savedContractorName = sessionStorage.getItem('contractorName');
+if (savedRemarks) {
+elements.remarksInput.value = savedRemarks;
+}
+if (savedHomeName) {
+elements.homeNameInput.value = savedHomeName;
+}
+if (savedContractorName) {
+elements.contractorNameInput.value = savedContractorName;
 }
 } catch (error) {
 console.error('備考読み込みエラー:', error);
 }
 }
 
-// 備考入力時の自動保存
+// 入力時の自動保存
 elements.remarksInput.addEventListener('input', saveRemarks);
+elements.homeNameInput.addEventListener('input', saveRemarks);
+elements.contractorNameInput.addEventListener('input', saveRemarks);
 
 // モード切り替え
 elements.userModeBtn.addEventListener('click', () => switchMode(false));
@@ -2283,6 +2305,8 @@ saveSelectedItems();
 // 全削除
 elements.clearAllBtn.addEventListener('click', () => {
 selectedItems = [];
+elements.homeNameInput.value = '';
+elements.contractorNameInput.value = '';
 elements.remarksInput.value = '';
 saveRemarks();
 updateCalculator();
@@ -2573,6 +2597,10 @@ ${remarks ? `
 </div>
 `;
 
+// 居宅名と契約者名の取得
+const homeName = elements.homeNameInput.value.trim() || '＿＿＿＿＿＿＿＿＿＿＿＿';
+const contractorName = elements.contractorNameInput.value.trim() || '＿＿＿＿＿＿＿＿';
+
 // ロゴHTML
 const logoHTML = logoData[selectedLogo] ? `
 <img src="${logoData[selectedLogo]}" alt="Company Logo" style="max-width: 200px; max-height: 80px; object-fit: contain;">
@@ -2581,12 +2609,17 @@ const logoHTML = logoData[selectedLogo] ? `
 // 1ページ目のHTML
 let page1HTML = `
 <div class="pdf-page" style="max-width: 714px; margin: 0 auto; background: white; page-break-after: always;">
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
 <div style="flex: 1;"></div>
 <h1 style="flex: 2; text-align: center; font-size: 24px; font-weight: bold; color: #1e293b; margin: 0;">福祉用具レンタル搬入完了書</h1>
 <div style="flex: 1; text-align: right;">
 ${logoHTML}
 </div>
+</div>
+
+<div style="margin-bottom: 30px; font-size: 14px; color: #374151; line-height: 1.8;">
+<div>居宅名　${homeName}　御中</div>
+<div style="padding-left: 20px;">契約者　　${contractorName}　様</div>
 </div>
 
 <div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px; color: #6b7280;">
