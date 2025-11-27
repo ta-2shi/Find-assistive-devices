@@ -1307,18 +1307,6 @@ Excelファイルをアップロード
 <p>選択された品目がここに表示されます</p>
 </div>
 </div>
-<div class="remarks-section">
-<label class="remarks-label" for="homeNameInput">居宅名</label>
-<input type="text" class="remarks-textarea" id="homeNameInput" placeholder="居宅名を入力してください..." style="min-height: 40px; padding: 10px;">
-</div>
-<div class="remarks-section">
-<label class="remarks-label" for="contractorNameInput">契約者名</label>
-<input type="text" class="remarks-textarea" id="contractorNameInput" placeholder="契約者名を入力してください..." style="min-height: 40px; padding: 10px;">
-</div>
-<div class="remarks-section">
-<label class="remarks-label" for="remarksInput">備考</label>
-<textarea class="remarks-textarea" id="remarksInput" placeholder="備考を入力してください..."></textarea>
-</div>
 <button class="clear-btn" id="clearAll">全て削除</button>
 </div>
 </div>
@@ -2206,7 +2194,52 @@ summaryHTML += `${totalAmount.toLocaleString()}円`;
 summaryHTML += `</div>`;
 summaryHTML += '</div>';
 
+// 入力欄を追加
+summaryHTML += `
+<div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+<div class="remarks-section">
+<label class="remarks-label" for="homeNameInput">居宅名</label>
+<input type="text" class="remarks-textarea" id="homeNameInput" placeholder="居宅名を入力してください..." style="min-height: 40px; padding: 10px;">
+</div>
+<div class="remarks-section">
+<label class="remarks-label" for="contractorNameInput">契約者名</label>
+<input type="text" class="remarks-textarea" id="contractorNameInput" placeholder="契約者名を入力してください..." style="min-height: 40px; padding: 10px;">
+</div>
+<div class="remarks-section">
+<label class="remarks-label" for="remarksInput">備考</label>
+<textarea class="remarks-textarea" id="remarksInput" placeholder="備考を入力してください..."></textarea>
+</div>
+</div>
+`;
+
 elements.selectedItemsContainer.innerHTML += summaryHTML;
+
+// 入力欄の値を復元
+const savedHomeName = sessionStorage.getItem('homeName') || '';
+const savedContractorName = sessionStorage.getItem('contractorName') || '';
+const savedRemarks = sessionStorage.getItem('remarksText') || '';
+
+const homeNameInput = document.getElementById('homeNameInput');
+const contractorNameInput = document.getElementById('contractorNameInput');
+const remarksInput = document.getElementById('remarksInput');
+
+if (homeNameInput) {
+homeNameInput.value = savedHomeName;
+homeNameInput.addEventListener('input', saveRemarks);
+}
+if (contractorNameInput) {
+contractorNameInput.value = savedContractorName;
+contractorNameInput.addEventListener('input', saveRemarks);
+}
+if (remarksInput) {
+remarksInput.value = savedRemarks;
+remarksInput.addEventListener('input', saveRemarks);
+}
+
+// 要素参照を更新
+elements.homeNameInput = homeNameInput;
+elements.contractorNameInput = contractorNameInput;
+elements.remarksInput = remarksInput;
 
 // ドラッグ&ドロップのイベントリスナーを追加
 setupDragAndDrop();
