@@ -1794,15 +1794,39 @@ showEmptySearchState();
 elements.searchInput.focus();
 });
 
+// 全角・半角を正規化する関数
+function normalizeText(text) {
+if (!text) return '';
+return text
+// 全角英数字を半角に変換
+.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+})
+// 全角カタカナを半角カタカナに変換
+.replace(/[\u30a1-\u30f6]/g, function(s) {
+return String.fromCharCode(s.charCodeAt(0) - 0x60);
+})
+// 全角スペースを半角スペースに変換
+.replace(/　/g, ' ')
+// 小文字に統一
+.toLowerCase();
+}
+
 function performSearch(query) {
 if (welfareEquipment.length === 0) {
 showNoDataState();
 return;
 }
 
-filteredItems = welfareEquipment.filter(item => 
-item.name.toLowerCase().includes(query.toLowerCase())
-);
+// 検索クエリを正規化
+const normalizedQuery = normalizeText(query);
+
+filteredItems = welfareEquipment.filter(item => {
+// 商品名を正規化
+const normalizedName = normalizeText(item.name);
+// 正規化した文字列で比較
+return normalizedName.includes(normalizedQuery);
+});
 
 displaySearchResults(filteredItems);
 }
