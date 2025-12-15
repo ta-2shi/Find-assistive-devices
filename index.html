@@ -1845,11 +1845,30 @@ return;
 // 検索クエリを正規化
 const normalizedQuery = normalizeText(query);
 
+// スペースで分割して複数キーワードを取得
+const keywords = normalizedQuery.split(/\s+/).filter(k => k.length > 0);
+
+// キーワードが空の場合は全件表示しない
+if (keywords.length === 0) {
+filteredItems = [];
+displaySearchResults(filteredItems);
+return;
+}
+
 filteredItems = welfareEquipment.filter(item => {
 // 商品名を正規化
 const normalizedName = normalizeText(item.name);
-// 正規化した文字列で比較
-return normalizedName.includes(normalizedQuery);
+// カテゴリも正規化
+const normalizedCategory = normalizeText(item.category || '');
+// taisコードも正規化
+const normalizedTaisCode = normalizeText(item.taisCode || '');
+    
+// すべてのキーワードが商品名、カテゴリ、またはtaisコードのいずれかに含まれているかチェック
+return keywords.every(keyword => 
+normalizedName.includes(keyword) || 
+normalizedCategory.includes(keyword) ||
+normalizedTaisCode.includes(keyword)
+);
 });
 
 displaySearchResults(filteredItems);
