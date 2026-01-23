@@ -2749,7 +2749,7 @@ const unit = item.isActualCost ? '円' : '点';
     
 return `
 <tr style="border-bottom: 1px solid #e5e7eb;">
-<td style="padding: 12px; text-align: center; border-right: 1px solid #e5e7eb;">${startIndex + index + 1}</td>
+<td style="padding: 8px; text-align: center; border-right: 1px solid #e5e7eb;">${startIndex + index + 1}</td>
 <td style="padding: 12px; border-right: 1px solid #e5e7eb;">
 <div style="font-weight: 600;">${categoryDisplay}</div>
 </td>
@@ -2774,7 +2774,7 @@ const burdenRateText = burdenRate === 1 ? '1割負担' : burdenRate === 2 ? '2�
 
 // 署名欄と文言のHTML
 const signatureAndFooter = `
-<div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #374151;">
+<div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #374151;">
 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 30px;">
 <div style="flex: 1; max-width: 400px;">
 ${remarks ? `
@@ -2821,29 +2821,29 @@ const logoHTML = logoData[selectedLogo] ? `
 // 1ページ目のHTML
 let page1HTML = `
 <div class="pdf-page" style="max-width: 714px; margin: 0 auto; background: white; page-break-after: always;">
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
 <div style="flex: 1;"></div>
-<h1 style="flex: 2; text-align: center; font-size: 24px; font-weight: bold; color: #1e293b; margin: 0;">福祉用具レンタル搬入完了書</h1>
+<h1 style="flex: 2; text-align: center; font-size: 22px; font-weight: bold; color: #1e293b; margin: 0;">福祉用具レンタル搬入完了書</h1>
 <div style="flex: 1; text-align: right;">
 ${logoHTML}
 </div>
 </div>
 
-<div style="margin-bottom: 30px; font-size: 14px; color: #374151; display: flex; justify-content: space-between; align-items: center;">
+<div style="margin-bottom: 12px; font-size: 13px; color: #374151; display: flex; justify-content: space-between; align-items: center;">
 <div>事業所名　${homeName}　様</div>
 <div>契約者　${contractorName}　様</div>
 </div>
 
-<div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px; color: #6b7280;">
+<div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: #6b7280;">
 <div>作成日: ${currentDate}</div>
 <div style="font-weight: 600; color: #2563eb;">${topSummaryHTML}</div>
 </div>
 
-<div style="text-align: center; margin-bottom: 20px; font-size: 14px; color: #374151;">
+<div style="text-align: center; margin-bottom: 12px; font-size: 13px; color: #374151;">
 担当：<span style="display: inline-block; border-bottom: 1px solid #374151; min-width: 200px; padding: 0 10px; font-weight: 600;">${currentSalesPerson || '　　　　　　　　'}</span>
 </div>
 
-<table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 14px;">
+<table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 13px;">
 <thead>
 <tr style="background: #f8fafc; border-bottom: 2px solid #374151;">
 <th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">No.</th>
@@ -2883,7 +2883,7 @@ ${logoHTML}
 <table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 14px;">
 <thead>
 <tr style="background: #f8fafc; border-bottom: 2px solid #374151;">
-<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">No.</th>
+<th style="padding: 8px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">No.</th>
 <th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">品目</th>
 <th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">商品名</th>
 <th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">単価</th>
