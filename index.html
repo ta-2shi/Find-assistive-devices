@@ -289,6 +289,117 @@ display: flex;
 flex-direction: column;
 }
 
+/* 担当者表示ヘッダー */
+.sales-person-header {
+text-align: center;
+padding: 10px;
+background: rgba(37, 99, 235, 0.1);
+border-radius: 8px;
+margin-top: 12px;
+font-size: 14px;
+color: #1e293b;
+font-weight: 600;
+}
+
+.change-btn {
+background: #2563eb;
+color: white;
+border: none;
+padding: 4px 12px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 12px;
+margin-left: 8px;
+transition: all 0.2s ease;
+}
+
+.change-btn:hover {
+background: #1d4ed8;
+transform: translateY(-1px);
+}
+
+/* モーダル */
+.modal {
+display: none;
+position: fixed;
+z-index: 10000;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.7);
+backdrop-filter: blur(5px);
+}
+
+.modal.active {
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.modal-content {
+background: white;
+padding: 40px;
+border-radius: 16px;
+max-width: 400px;
+width: 90%;
+box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+from {
+opacity: 0;
+transform: translateY(-20px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+.sales-person-select {
+width: 100%;
+padding: 14px;
+border: 2px solid #e5e7eb;
+border-radius: 8px;
+font-size: 16px;
+margin-bottom: 20px;
+background: white;
+cursor: pointer;
+transition: all 0.2s ease;
+}
+
+.sales-person-select:focus {
+outline: none;
+border-color: #2563eb;
+box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.confirm-btn {
+width: 100%;
+background: linear-gradient(45deg, #2563eb, #1d4ed8);
+color: white;
+border: none;
+padding: 14px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+font-size: 16px;
+transition: all 0.3s ease;
+}
+
+.confirm-btn:hover:not(:disabled) {
+transform: translateY(-2px);
+box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+}
+
+.confirm-btn:disabled {
+background: #9ca3af;
+cursor: not-allowed;
+opacity: 0.5;
+}
+
 .input-label {
 color: rgba(255, 255, 255, 0.9);
 font-size: 14px;
@@ -1198,6 +1309,11 @@ animation: spin 1s linear infinite;
 <div class="container">
 <div class="header">
 <h1 class="title">福祉用具点数計算アプリ</h1>
+
+<div id="salesPersonHeader" class="sales-person-header" style="display: none;">
+担当：<span id="currentSalesPerson"></span>
+<button id="changeSalesPersonBtn" class="change-btn">変更</button>
+</div>
 
 <div class="mode-toggle">
 <button class="mode-btn active" id="userMode">利用者モード</button>
@@ -2718,9 +2834,10 @@ ${logoHTML}
 <div>契約者　${contractorName}　様</div>
 </div>
 
-<div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px; color: #6b7280;">
-<div>作成日: ${currentDate}</div>
-<div style="font-weight: 600; color: #2563eb;">${topSummaryHTML}</div>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; font-size: 14px; color: #6b7280;">
+<div style="flex: 1;">作成日: ${currentDate}</div>
+<div style="flex: 1; text-align: center; font-weight: 600; color: #1e293b;">担当：${currentSalesPerson || '未設定'}</div>
+<div style="flex: 1; text-align: right; font-weight: 600; color: #2563eb;">${topSummaryHTML}</div>
 </div>
 
 <table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 14px;">
@@ -2822,11 +2939,74 @@ function clearStatus() {
 elements.adminStatus.innerHTML = '';
 }
 
+// 担当者管理
+let currentSalesPerson = localStorage.getItem('salesPerson') || '';
+
+function initSalesPersonModal() {
+const modal = document.getElementById('salesPersonModal');
+const select = document.getElementById('salesPersonSelect');
+const confirmBtn = document.getElementById('confirmSalesPersonBtn');
+const changeSalesPersonBtn = document.getElementById('changeSalesPersonBtn');
+const salesPersonHeader = document.getElementById('salesPersonHeader');
+const currentSalesPersonSpan = document.getElementById('currentSalesPerson');
+
+// 担当者が未設定の場合はモーダルを表示
+if (!currentSalesPerson) {
+modal.classList.add('active');
+} else {
+// 既に設定されている場合はヘッダーに表示
+salesPersonHeader.style.display = 'block';
+currentSalesPersonSpan.textContent = currentSalesPerson;
+}
+
+// 選択時にボタンを有効化
+select.addEventListener('change', () => {
+confirmBtn.disabled = !select.value;
+});
+
+// 決定ボタン
+confirmBtn.addEventListener('click', () => {
+const selectedPerson = select.value;
+if (selectedPerson) {
+currentSalesPerson = selectedPerson;
+localStorage.setItem('salesPerson', selectedPerson);
+modal.classList.remove('active');
+salesPersonHeader.style.display = 'block';
+currentSalesPersonSpan.textContent = selectedPerson;
+}
+});
+
+// 変更ボタン
+changeSalesPersonBtn.addEventListener('click', () => {
+select.value = currentSalesPerson;
+confirmBtn.disabled = false;
+modal.classList.add('active');
+});
+}
+  
 // アプリケーション初期化
 window.addEventListener('load', () => {
 // Firebase が読み込まれるまで少し待つ
-setTimeout(initializeApp, 1000);
+setTimeout(() => {
+initializeApp();
+initSalesPersonModal(); // 
+}, 1000);
 });
 </script>
+
+<!-- 担当者選択モーダル -->
+<div id="salesPersonModal" class="modal">
+<div class="modal-content">
+<h2 style="margin-bottom: 20px; color: #1e293b;">担当者を選択してください</h2>
+<select id="salesPersonSelect" class="sales-person-select">
+<option value="">選択してください</option>
+<option value="田中 太郎">田中 太郎</option>
+<option value="佐藤 花子">佐藤 花子</option>
+<option value="鈴木 一郎">鈴木 一郎</option>
+</select>
+<button id="confirmSalesPersonBtn" class="confirm-btn" disabled>決定</button>
+</div>
+</div>
+  
 </body>
 </html>
