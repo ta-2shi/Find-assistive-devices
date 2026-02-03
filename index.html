@@ -3189,6 +3189,24 @@ mobileOverlay.classList.remove('active');
 }
 window.restoreFromHistory = restoreFromHistory;
 
+  // 画面サイズ変更時の対応
+window.addEventListener('resize', () => {
+  // 管理者モードでない場合のみ
+  if (!isAdminMode) {
+    const calculator = document.querySelector('.calculator');
+    if (window.innerWidth >= 768) {
+      // PC表示: 計算機を表示
+      calculator.style.display = 'flex';
+      calculator.classList.remove('show');
+    } else {
+      // モバイル表示: 計算機を非表示（ボタンから開く）
+      if (!calculator.classList.contains('show')) {
+        calculator.style.display = 'none';
+      }
+    }
+  }
+});
+
 // 担当者管理
 let currentSalesPerson = localStorage.getItem('salesPerson') || '';
 
