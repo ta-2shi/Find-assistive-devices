@@ -1262,16 +1262,19 @@ animation: spin 1s linear infinite;
     display: flex;
   }
 
-  .close-btn {
-    background: #6b7280;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-bottom: 16px;
-  }
+ .close-btn {
+  position: sticky;  /* ← 追加 */
+  top: 0;  /* ← 追加 */
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 16px;
+  z-index: 10;  /* ← 追加 */
+}
 
   .result-item {
     margin-bottom: 8px;
