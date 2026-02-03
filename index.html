@@ -3176,12 +3176,6 @@ function clearStatus() {
 elements.adminStatus.innerHTML = '';
 }
 
-// 履歴関連のイベントリスナー
-document.addEventListener('DOMContentLoaded', () => {
-document.getElementById('clearAllHistoryBtn')?.addEventListener('click', clearAllHistory);
-document.getElementById('restoreFromCodeBtn')?.addEventListener('click', restoreFromCode);
-});
-
 // 担当者管理
 let currentSalesPerson = localStorage.getItem('salesPerson') || '';
 
@@ -3469,7 +3463,25 @@ window.addEventListener('load', () => {
 // Firebase が読み込まれるまで少し待つ
 setTimeout(() => {
 initializeApp();
-initSalesPersonModal(); // 
+initSalesPersonModal();
+
+// 履歴関連のイベントリスナー
+const clearAllBtn = document.getElementById('clearAllHistoryBtn');
+const restoreBtn = document.getElementById('restoreFromCodeBtn');
+if (clearAllBtn) clearAllBtn.addEventListener('click', clearAllHistory);
+if (restoreBtn) restoreBtn.addEventListener('click', restoreFromCode);
+// ↑↑↑ ここまで追加 ↑↑↑
+
+}, 1000);
+});
+```
+
+---
+
+## ⚠️ **警告について（無視してOK）**
+```
+<meta name="apple-mobile-web-app-capable" content="yes"> is deprecated
+
 }, 1000);
 });
 </script>
