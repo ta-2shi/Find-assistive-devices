@@ -1857,7 +1857,12 @@ document.querySelector('.calculator').style.display = 'none';
 document.querySelector('.search-container').style.display = 'block';
 document.querySelector('.favorite-section').style.display = 'block';
 document.getElementById('searchResults').style.display = 'block';
-document.querySelector('.calculator').style.display = 'flex';
+// モバイルでは計算機を自動表示しない
+if (window.innerWidth >= 768) {
+  document.querySelector('.calculator').style.display = 'flex';
+} else {
+  document.querySelector('.calculator').style.display = 'none';
+}
 }
 
 // 検索結果を更新
