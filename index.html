@@ -1767,9 +1767,9 @@ document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('acti
 document.getElementById('historyMode').classList.add('active');
 
 elements.adminPanel.classList.remove('active');
-elements.searchContainer.style.display = 'none';
+document.querySelector('.search-container').style.display = 'none';
 document.querySelector('.favorite-section').style.display = 'none';
-elements.searchResults.style.display = 'none';
+document.getElementById('searchResults').style.display = 'none';
 document.querySelector('.calculator').style.display = 'none';
 document.getElementById('historySection').style.display = 'block';
 
