@@ -1786,14 +1786,14 @@ elements.adminPanel.classList.toggle('active', admin);
 document.getElementById('historySection').style.display = 'none';
 
 if (admin) {
-elements.searchContainer.style.display = 'none';
+document.querySelector('.search-container').style.display = 'none';
 document.querySelector('.favorite-section').style.display = 'none';
-elements.searchResults.style.display = 'none';
+document.getElementById('searchResults').style.display = 'none';
 document.querySelector('.calculator').style.display = 'none';
 } else {
-elements.searchContainer.style.display = 'block';
+document.querySelector('.search-container').style.display = 'block';
 document.querySelector('.favorite-section').style.display = 'block';
-elements.searchResults.style.display = 'block';
+document.getElementById('searchResults').style.display = 'block';
 document.querySelector('.calculator').style.display = 'flex';
 }
 
@@ -3085,9 +3085,14 @@ if (!item) return;
 
 selectedItems = JSON.parse(JSON.stringify(item.selectedItems));
 burdenRate = item.burdenRate;
-elements.homeNameInput.value = item.homeName;
-elements.contractorNameInput.value = item.contractorName;
-elements.remarksInput.value = item.remarks;
+
+const homeInput = document.getElementById('homeNameInput');
+const contractorInput = document.getElementById('contractorNameInput');
+const remarksInput = document.getElementById('remarksInput');
+
+if (homeInput) homeInput.value = item.homeName;
+if (contractorInput) contractorInput.value = item.contractorName;
+if (remarksInput) remarksInput.value = item.remarks;
 
 document.querySelectorAll('.burden-btn').forEach(btn => {
 btn.classList.remove('active');
@@ -3096,8 +3101,8 @@ btn.classList.add('active');
 }
 });
 
-updateSelectedList();
-updateSummary();
+renderSelectedItems();
+calculateTotal();
 
 document.getElementById('userMode').click();
 alert('履歴から復元しました！');
