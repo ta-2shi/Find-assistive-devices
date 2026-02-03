@@ -1758,7 +1758,14 @@ function loadRemarks() {
 // 入力時の自動保存（動的に生成される要素にはupdateCalculator内で設定済み）
   
 // モード切り替え
-elements.userModeBtn.addEventListener('click', () => switchMode(false));
+elements.userModeBtn.addEventListener('click', () => {
+// モバイルのモーダルを閉じる
+const mobileOverlay = document.querySelector('.mobile-overlay');
+if (mobileOverlay) {
+mobileOverlay.classList.remove('active');
+}
+switchMode(false);
+});
 elements.adminModeBtn.addEventListener('click', () => switchMode(true));
 
 // 履歴ボタン
@@ -3105,10 +3112,15 @@ updateCalculator();
 updateMobileCount();
 saveSelectedItems();
 
+// モバイルのモーダルを閉じる
+const mobileOverlay = document.querySelector('.mobile-overlay');
+if (mobileOverlay) {
+mobileOverlay.classList.remove('active');
+}
+
 document.getElementById('userMode').click();
 alert('履歴から復元しました！');
 }
-
 window.restoreFromHistory = restoreFromHistory;
 
 // 担当者管理
