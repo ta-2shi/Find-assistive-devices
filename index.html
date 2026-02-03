@@ -400,6 +400,51 @@ cursor: not-allowed;
 opacity: 0.5;
 }
 
+.history-item {
+background: white;
+border-radius: 12px;
+padding: 16px;
+margin-bottom: 12px;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.history-item-date {
+font-size: 13px;
+color: #6b7280;
+margin-bottom: 4px;
+}
+
+.history-item-details {
+font-size: 14px;
+color: #374151;
+font-weight: 600;
+margin-bottom: 8px;
+}
+
+.history-item-summary {
+font-size: 13px;
+color: #6b7280;
+padding-top: 8px;
+border-top: 1px solid #e5e7eb;
+margin-top: 8px;
+}
+
+.history-restore-btn {
+background: #2563eb;
+color: white;
+border: none;
+padding: 6px 16px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 13px;
+font-weight: 600;
+margin-top: 8px;
+}
+
+.history-restore-btn:hover {
+background: #1d4ed8;
+}
+
 .input-label {
 color: rgba(255, 255, 255, 0.9);
 font-size: 14px;
@@ -1317,6 +1362,7 @@ animation: spin 1s linear infinite;
 
 <div class="mode-toggle">
 <button class="mode-btn active" id="userMode">利用者モード</button>
+<button class="mode-btn" id="historyMode">履歴</button>
 <button class="mode-btn" id="adminMode">管理者モード</button>
 </div>
 
@@ -1375,6 +1421,11 @@ Excelファイルをアップロード
 <div class="search-container">
 <input type="text" class="search-input" id="searchInput" placeholder="福祉用具を検索...">
 <button class="search-clear-btn" id="searchClearBtn">×</button>
+</div>
+
+<div id="historySection" style="display: none; background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+<h3 style="color: white; margin-bottom: 16px;">保存された履歴</h3>
+<div id="historyList"></div>
 </div>
 
 <div class="favorite-section">
@@ -1710,11 +1761,41 @@ function loadRemarks() {
 elements.userModeBtn.addEventListener('click', () => switchMode(false));
 elements.adminModeBtn.addEventListener('click', () => switchMode(true));
 
+// 履歴ボタン
+document.getElementById('historyMode').addEventListener('click', () => {
+document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+document.getElementById('historyMode').classList.add('active');
+
+elements.adminPanel.classList.remove('active');
+elements.searchContainer.style.display = 'none';
+document.querySelector('.favorite-section').style.display = 'none';
+elements.searchResults.style.display = 'none';
+document.querySelector('.calculator').style.display = 'none';
+document.getElementById('historySection').style.display = 'block';
+
+loadHistory();
+});
+
 function switchMode(admin) {
 isAdminMode = admin;
 elements.userModeBtn.classList.toggle('active', !admin);
 elements.adminModeBtn.classList.toggle('active', admin);
 elements.adminPanel.classList.toggle('active', admin);
+
+// 履歴セクションを非表示
+document.getElementById('historySection').style.display = 'none';
+
+if (admin) {
+elements.searchContainer.style.display = 'none';
+document.querySelector('.favorite-section').style.display = 'none';
+elements.searchResults.style.display = 'none';
+document.querySelector('.calculator').style.display = 'none';
+} else {
+elements.searchContainer.style.display = 'block';
+document.querySelector('.favorite-section').style.display = 'block';
+elements.searchResults.style.display = 'block';
+document.querySelector('.calculator').style.display = 'flex';
+}
 
 // 検索結果を更新
 if (elements.searchInput.value.trim()) {
@@ -2684,6 +2765,9 @@ const filename = `福祉用具レンタル搬入完了書_${currentDate.replace(
 // PDF保存
 pdf.save(filename);
 
+// 履歴に自動保存
+saveToHistory();
+
 } catch (error) {
 console.error('PDF生成エラー:', error);
 alert('PDF生成中にエラーが発生しました。ブラウザが対応していない可能性があります。');
@@ -2940,6 +3024,86 @@ setTimeout(clearStatus, 8000);
 function clearStatus() {
 elements.adminStatus.innerHTML = '';
 }
+
+// 履歴管理
+const HISTORY_KEY = 'pdfHistory';
+const MAX_HISTORY = 10;
+
+function saveToHistory() {
+if (selectedItems.length === 0) return;
+
+const historyItem = {
+id: Date.now(),
+timestamp: new Date().toISOString(),
+salesPerson: currentSalesPerson || '未設定',
+homeName: elements.homeNameInput.value.trim() || '',
+contractorName: elements.contractorNameInput.value.trim() || '',
+remarks: elements.remarksInput.value.trim() || '',
+burdenRate: burdenRate,
+selectedItems: selectedItems,
+};
+
+let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+history.unshift(historyItem);
+history = history.slice(0, MAX_HISTORY);
+localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function loadHistory() {
+const historyList = document.getElementById('historyList');
+const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+
+if (history.length === 0) {
+historyList.innerHTML = '<p style="color: rgba(255,255,255,0.7); text-align: center; padding: 40px;">まだ履歴がありません</p>';
+return;
+}
+
+historyList.innerHTML = history.map(item => {
+const date = new Date(item.timestamp);
+const formattedDate = `${date.getFullYear()}/${String(date.getMonth()+1).padStart(2,'0')}/${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+const itemCount = item.selectedItems.length;
+const totalPoints = item.selectedItems.reduce((sum, i) => {
+const total = i.points * i.quantity;
+return sum + (i.isHalfMonth ? total / 2 : total);
+}, 0);
+
+return `
+<div class="history-item">
+<div class="history-item-date">${formattedDate}</div>
+<div class="history-item-details">担当: ${item.salesPerson} | ${item.homeName || '事業所未入力'} | ${item.contractorName || '契約者未入力'}</div>
+<div class="history-item-summary">品目数: ${itemCount}件 | 合計: ${totalPoints.toLocaleString()}点</div>
+<button class="history-restore-btn" onclick="restoreFromHistory(${item.id})">復元</button>
+</div>
+`;
+}).join('');
+}
+
+function restoreFromHistory(id) {
+const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+const item = history.find(h => h.id === id);
+if (!item) return;
+
+selectedItems = JSON.parse(JSON.stringify(item.selectedItems));
+burdenRate = item.burdenRate;
+elements.homeNameInput.value = item.homeName;
+elements.contractorNameInput.value = item.contractorName;
+elements.remarksInput.value = item.remarks;
+
+document.querySelectorAll('.burden-btn').forEach(btn => {
+btn.classList.remove('active');
+if (parseFloat(btn.dataset.rate) === burdenRate) {
+btn.classList.add('active');
+}
+});
+
+updateSelectedList();
+updateSummary();
+
+document.getElementById('userMode').click();
+alert('履歴から復元しました！');
+}
+
+window.restoreFromHistory = restoreFromHistory;
 
 // 担当者管理
 let currentSalesPerson = localStorage.getItem('salesPerson') || '';
