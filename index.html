@@ -400,6 +400,180 @@ cursor: not-allowed;
 opacity: 0.5;
 }
 
+/* 履歴セクション */
+.history-section {
+background: rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+padding: 20px;
+margin-bottom: 20px;
+}
+
+.history-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 16px;
+}
+
+.clear-all-btn {
+background: linear-gradient(45deg, #ef4444, #dc2626);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+font-size: 13px;
+transition: all 0.3s ease;
+}
+
+.clear-all-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.history-list {
+display: flex;
+flex-direction: column;
+gap: 12px;
+max-height: 400px;
+overflow-y: auto;
+}
+
+.history-item {
+background: rgba(255, 255, 255, 0.95);
+border-radius: 12px;
+padding: 16px;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+transition: all 0.3s ease;
+}
+
+.history-item:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.history-item-header {
+display: flex;
+justify-content: space-between;
+align-items: start;
+margin-bottom: 12px;
+}
+
+.history-item-info {
+flex: 1;
+}
+
+.history-item-date {
+font-size: 13px;
+color: #6b7280;
+margin-bottom: 4px;
+}
+
+.history-item-details {
+font-size: 14px;
+color: #374151;
+font-weight: 600;
+}
+
+.history-item-summary {
+font-size: 13px;
+color: #6b7280;
+margin-top: 8px;
+padding-top: 8px;
+border-top: 1px solid #e5e7eb;
+}
+
+.history-item-actions {
+display: flex;
+gap: 8px;
+}
+
+.history-restore-btn, .history-share-btn, .history-delete-btn {
+background: white;
+border: 2px solid;
+padding: 6px 12px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 12px;
+font-weight: 600;
+transition: all 0.2s ease;
+}
+
+.history-restore-btn {
+border-color: #2563eb;
+color: #2563eb;
+}
+
+.history-restore-btn:hover {
+background: #2563eb;
+color: white;
+}
+
+.history-share-btn {
+border-color: #10b981;
+color: #10b981;
+}
+
+.history-share-btn:hover {
+background: #10b981;
+color: white;
+}
+
+.history-delete-btn {
+border-color: #ef4444;
+color: #ef4444;
+}
+
+.history-delete-btn:hover {
+background: #ef4444;
+color: white;
+}
+
+.restore-code-section {
+margin-top: 20px;
+padding-top: 20px;
+border-top: 2px dashed rgba(255, 255, 255, 0.3);
+}
+
+.restore-code-input {
+flex: 1;
+padding: 12px;
+border: 2px solid rgba(255, 255, 255, 0.3);
+border-radius: 8px;
+background: rgba(255, 255, 255, 0.9);
+font-size: 16px;
+}
+
+.restore-btn {
+background: linear-gradient(45deg, #10b981, #059669);
+color: white;
+border: none;
+padding: 12px 24px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 600;
+font-size: 14px;
+transition: all 0.3s ease;
+white-space: nowrap;
+}
+
+.restore-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.empty-history {
+text-align: center;
+padding: 40px 20px;
+color: rgba(255, 255, 255, 0.8);
+}
+
+.empty-history-icon {
+font-size: 48px;
+margin-bottom: 16px;
+}
+
 .input-label {
 color: rgba(255, 255, 255, 0.9);
 font-size: 14px;
@@ -1316,8 +1490,9 @@ animation: spin 1s linear infinite;
 </div>
 
 <div class="mode-toggle">
-<button class="mode-btn active" id="userMode">利用者モード</button>
-<button class="mode-btn" id="adminMode">管理者モード</button>
+<button class="mode-btn active" data-mode="user">利用者モード</button>
+<button class="mode-btn" data-mode="history">履歴</button>
+<button class="mode-btn" data-mode="admin">管理者モード</button>
 </div>
 
 <div class="admin-panel" id="adminPanel">
@@ -1375,6 +1550,22 @@ Excelファイルをアップロード
 <div class="search-container">
 <input type="text" class="search-input" id="searchInput" placeholder="福祉用具を検索...">
 <button class="search-clear-btn" id="searchClearBtn">×</button>
+</div>
+
+<!-- 履歴セクション -->
+<div id="historySection" class="history-section" style="display: none;">
+<div class="history-header">
+<h3 style="color: white; margin-bottom: 16px;">保存された履歴</h3>
+<button id="clearAllHistoryBtn" class="clear-all-btn">全て削除</button>
+</div>
+<div id="historyList" class="history-list"></div>
+<div class="restore-code-section">
+<h3 style="color: white; margin: 20px 0 12px 0;">復活の呪文で復元</h3>
+<div style="display: flex; gap: 8px;">
+<input type="text" id="restoreCodeInput" class="restore-code-input" placeholder="呪文を入力してください">
+<button id="restoreFromCodeBtn" class="restore-btn">復元</button>
+</div>
+</div>
 </div>
 
 <div class="favorite-section">
@@ -1710,11 +1901,52 @@ function loadRemarks() {
 elements.userModeBtn.addEventListener('click', () => switchMode(false));
 elements.adminModeBtn.addEventListener('click', () => switchMode(true));
 
+// 履歴ボタン
+const historyModeBtn = document.querySelector('[data-mode="history"]');
+if (historyModeBtn) {
+  historyModeBtn.addEventListener('click', () => {
+    isAdminMode = false;
+    elements.userModeBtn.classList.remove('active');
+    elements.adminModeBtn.classList.remove('active');
+    historyModeBtn.classList.add('active');
+    
+    elements.adminPanel.classList.remove('active');
+    elements.searchContainer.style.display = 'none';
+    document.querySelector('.favorite-section').style.display = 'none';
+    elements.searchResults.style.display = 'none';
+    document.querySelector('.calculator').style.display = 'none';
+    document.getElementById('historySection').style.display = 'block';
+    
+    loadHistory();
+  });
+}
+
 function switchMode(admin) {
 isAdminMode = admin;
+const historySection = document.getElementById('historySection');
+
+// ボタンの状態更新
 elements.userModeBtn.classList.toggle('active', !admin);
 elements.adminModeBtn.classList.toggle('active', admin);
+
+// パネルの表示切り替え
 elements.adminPanel.classList.toggle('active', admin);
+
+if (admin) {
+  // 管理者モード
+  elements.searchContainer.style.display = 'none';
+  document.querySelector('.favorite-section').style.display = 'none';
+  elements.searchResults.style.display = 'none';
+  document.querySelector('.calculator').style.display = 'none';
+  historySection.style.display = 'none';
+} else {
+  // 利用者モード
+  elements.searchContainer.style.display = 'block';
+  document.querySelector('.favorite-section').style.display = 'block';
+  elements.searchResults.style.display = 'block';
+  document.querySelector('.calculator').style.display = 'flex';
+  historySection.style.display = 'none';
+}
 
 // 検索結果を更新
 if (elements.searchInput.value.trim()) {
@@ -2684,6 +2916,9 @@ const filename = `福祉用具レンタル搬入完了書_${currentDate.replace(
 // PDF保存
 pdf.save(filename);
 
+// 履歴に自動保存
+saveToHistory();
+
 } catch (error) {
 console.error('PDF生成エラー:', error);
 alert('PDF生成中にエラーが発生しました。ブラウザが対応していない可能性があります。');
@@ -2941,6 +3176,12 @@ function clearStatus() {
 elements.adminStatus.innerHTML = '';
 }
 
+// 履歴関連のイベントリスナー
+document.addEventListener('DOMContentLoaded', () => {
+document.getElementById('clearAllHistoryBtn')?.addEventListener('click', clearAllHistory);
+document.getElementById('restoreFromCodeBtn')?.addEventListener('click', restoreFromCode);
+});
+
 // 担当者管理
 let currentSalesPerson = localStorage.getItem('salesPerson') || '';
 
@@ -2985,6 +3226,243 @@ confirmBtn.disabled = false;
 modal.classList.add('active');
 });
 }
+
+// 履歴管理
+const HISTORY_KEY = 'pdfHistory';
+const MAX_HISTORY = 10;
+
+// 履歴を保存
+function saveToHistory() {
+if (selectedItems.length === 0) {
+alert('保存する項目がありません');
+return;
+}
+
+const historyItem = {
+id: Date.now(),
+timestamp: new Date().toISOString(),
+salesPerson: currentSalesPerson || '未設定',
+homeName: elements.homeNameInput.value.trim() || '',
+contractorName: elements.contractorNameInput.value.trim() || '',
+remarks: elements.remarksInput.value.trim() || '',
+burdenRate: burdenRate,
+selectedItems: selectedItems,
+};
+
+let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+history.unshift(historyItem);
+history = history.slice(0, MAX_HISTORY);
+localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+
+showSuccess('履歴に保存しました');
+}
+
+// 履歴を読み込んで表示
+function loadHistory() {
+const historyList = document.getElementById('historyList');
+const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+
+if (history.length === 0) {
+historyList.innerHTML = `
+<div class="empty-history">
+<div class="empty-history-icon">📋</div>
+<p>まだ履歴がありません</p>
+<p style="font-size: 13px; margin-top: 8px;">PDFを作成すると自動的に保存されます</p>
+</div>
+`;
+return;
+}
+
+historyList.innerHTML = history.map(item => {
+const date = new Date(item.timestamp);
+const formattedDate = `${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+const itemCount = item.selectedItems.length;
+const totalPoints = item.selectedItems.reduce((sum, i) => {
+const total = i.points * i.quantity;
+return sum + (i.isHalfMonth ? total / 2 : total);
+}, 0);
+
+return `
+<div class="history-item">
+<div class="history-item-header">
+<div class="history-item-info">
+<div class="history-item-date">${formattedDate}</div>
+<div class="history-item-details">
+担当: ${item.salesPerson} | ${item.homeName || '事業所未入力'} | ${item.contractorName || '契約者未入力'}
+</div>
+<div class="history-item-summary">
+品目数: ${itemCount}件 | 合計: ${totalPoints.toLocaleString()}点
+</div>
+</div>
+<div class="history-item-actions">
+<button class="history-restore-btn" onclick="restoreFromHistory(${item.id})">復元</button>
+<button class="history-share-btn" onclick="generateShareCode(${item.id})">共有</button>
+<button class="history-delete-btn" onclick="deleteHistory(${item.id})">削除</button>
+</div>
+</div>
+</div>
+`;
+}).join('');
+}
+
+// 履歴から復元
+function restoreFromHistory(id) {
+const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+const item = history.find(h => h.id === id);
+
+if (!item) {
+alert('履歴が見つかりません');
+return;
+}
+
+// データを復元
+selectedItems = JSON.parse(JSON.stringify(item.selectedItems));
+burdenRate = item.burdenRate;
+elements.homeNameInput.value = item.homeName;
+elements.contractorNameInput.value = item.contractorName;
+elements.remarksInput.value = item.remarks;
+
+// 負担割合ボタンの状態を更新
+document.querySelectorAll('.burden-btn').forEach(btn => {
+btn.classList.remove('active');
+if (parseFloat(btn.dataset.rate) === burdenRate) {
+btn.classList.add('active');
+}
+});
+
+// 表示を更新
+updateSelectedList();
+updateSummary();
+
+// 利用者モードに切り替え
+document.querySelectorAll('.mode-btn').forEach(btn => {
+btn.classList.remove('active');
+if (btn.dataset.mode === 'user') {
+btn.classList.add('active');
+}
+});
+document.getElementById('historySection').style.display = 'none';
+document.querySelector('.search-container').style.display = 'block';
+document.querySelector('.favorite-section').style.display = 'block';
+document.getElementById('searchResults').style.display = 'block';
+document.querySelector('.calculator').style.display = 'flex';
+
+showSuccess('履歴から復元しました');
+}
+
+// 履歴を削除
+function deleteHistory(id) {
+if (!confirm('この履歴を削除しますか?')) return;
+
+let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+history = history.filter(h => h.id !== id);
+localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+
+loadHistory();
+showSuccess('履歴を削除しました');
+}
+
+// 全履歴削除
+function clearAllHistory() {
+if (!confirm('全ての履歴を削除しますか？\nこの操作は取り消せません。')) return;
+
+localStorage.removeItem(HISTORY_KEY);
+loadHistory();
+showSuccess('全ての履歴を削除しました');
+}
+
+// 復活の呪文を生成
+function generateShareCode(id) {
+const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+const item = history.find(h => h.id === id);
+
+if (!item) {
+alert('データが見つかりません');
+return;
+}
+
+// データを圧縮してBase64エンコード
+const data = JSON.stringify(item);
+const compressed = btoa(encodeURIComponent(data));
+
+// クリップボードにコピー
+navigator.clipboard.writeText(compressed).then(() => {
+alert(`復活の呪文をコピーしました！\n\n他の端末で「履歴」タブから呪文を入力すると復元できます。\n\n呪文の長さ: ${compressed.length}文字`);
+}).catch(() => {
+// フォールバック: テキストエリアで表示
+const textarea = document.createElement('textarea');
+textarea.value = compressed;
+textarea.style.position = 'fixed';
+textarea.style.opacity = '0';
+document.body.appendChild(textarea);
+textarea.select();
+document.execCommand('copy');
+document.body.removeChild(textarea);
+alert(`復活の呪文をコピーしました！\n\n呪文の長さ: ${compressed.length}文字`);
+});
+}
+
+// 復活の呪文から復元
+function restoreFromCode() {
+const code = document.getElementById('restoreCodeInput').value.trim();
+
+if (!code) {
+alert('復活の呪文を入力してください');
+return;
+}
+
+try {
+// Base64デコードしてデータを復元
+const data = decodeURIComponent(atob(code));
+const item = JSON.parse(data);
+
+// データを復元
+selectedItems = JSON.parse(JSON.stringify(item.selectedItems));
+burdenRate = item.burdenRate;
+elements.homeNameInput.value = item.homeName;
+elements.contractorNameInput.value = item.contractorName;
+elements.remarksInput.value = item.remarks;
+
+// 負担割合ボタンの状態を更新
+document.querySelectorAll('.burden-btn').forEach(btn => {
+btn.classList.remove('active');
+if (parseFloat(btn.dataset.rate) === burdenRate) {
+btn.classList.add('active');
+}
+});
+
+// 表示を更新
+updateSelectedList();
+updateSummary();
+
+// 利用者モードに切り替え
+document.querySelectorAll('.mode-btn').forEach(btn => {
+btn.classList.remove('active');
+if (btn.dataset.mode === 'user') {
+btn.classList.add('active');
+}
+});
+document.getElementById('historySection').style.display = 'none';
+document.querySelector('.search-container').style.display = 'block';
+document.querySelector('.favorite-section').style.display = 'block';
+document.getElementById('searchResults').style.display = 'block';
+document.querySelector('.calculator').style.display = 'flex';
+
+// 入力欄をクリア
+document.getElementById('restoreCodeInput').value = '';
+
+alert('復活の呪文から復元しました！');
+
+} catch (error) {
+console.error('復元エラー:', error);
+alert('復活の呪文が正しくありません。\nコピーした文字列を正確に貼り付けてください。');
+}
+}
+
+// グローバルに公開
+window.restoreFromHistory = restoreFromHistory;
+window.deleteHistory = deleteHistory;
+window.generateShareCode = generateShareCode;
   
 // アプリケーション初期化
 window.addEventListener('load', () => {
