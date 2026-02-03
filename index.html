@@ -1901,26 +1901,6 @@ function loadRemarks() {
 elements.userModeBtn.addEventListener('click', () => switchMode(false));
 elements.adminModeBtn.addEventListener('click', () => switchMode(true));
 
-// 履歴ボタン
-const historyModeBtn = document.querySelector('[data-mode="history"]');
-if (historyModeBtn) {
-  historyModeBtn.addEventListener('click', () => {
-    isAdminMode = false;
-    elements.userModeBtn.classList.remove('active');
-    elements.adminModeBtn.classList.remove('active');
-    historyModeBtn.classList.add('active');
-    
-    elements.adminPanel.classList.remove('active');
-    elements.searchContainer.style.display = 'none';
-    document.querySelector('.favorite-section').style.display = 'none';
-    elements.searchResults.style.display = 'none';
-    document.querySelector('.calculator').style.display = 'none';
-    document.getElementById('historySection').style.display = 'block';
-    
-    loadHistory();
-  });
-}
-
 function switchMode(admin) {
 isAdminMode = admin;
 const historySection = document.getElementById('historySection');
@@ -3470,6 +3450,25 @@ const clearAllBtn = document.getElementById('clearAllHistoryBtn');
 const restoreBtn = document.getElementById('restoreFromCodeBtn');
 if (clearAllBtn) clearAllBtn.addEventListener('click', clearAllHistory);
 if (restoreBtn) restoreBtn.addEventListener('click', restoreFromCode);
+
+// 履歴ボタン
+const historyModeBtn = document.querySelector('[data-mode="history"]');
+if (historyModeBtn) {
+  historyModeBtn.addEventListener('click', () => {
+    isAdminMode = false;
+    elements.userModeBtn.classList.remove('active');
+    elements.adminModeBtn.classList.remove('active');
+    historyModeBtn.classList.add('active');
+    
+    elements.adminPanel.classList.remove('active');
+    elements.searchContainer.style.display = 'none';
+    document.querySelector('.favorite-section').style.display = 'none';
+    elements.searchResults.style.display = 'none';
+    document.querySelector('.calculator').style.display = 'none';
+    document.getElementById('historySection').style.display = 'block';
+    loadHistory();
+  });
+}
 
 }, 1000);
 });
