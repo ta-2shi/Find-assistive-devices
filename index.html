@@ -2677,13 +2677,15 @@ elements.clearAllTop.addEventListener('click', handleClearAll);
 
 // モバイル表示切り替え
 elements.toggleCalculatorBtn.addEventListener('click', () => {
-elements.calculator.classList.add('show');
-elements.closeCalculatorBtn.style.display = 'block';
+  elements.calculator.classList.add('show');
+  elements.calculator.style.display = 'flex';  
+  elements.closeCalculatorBtn.style.display = 'block';
 });
 
 elements.closeCalculatorBtn.addEventListener('click', () => {
-elements.calculator.classList.remove('show');
-elements.closeCalculatorBtn.style.display = 'none';
+  elements.calculator.classList.remove('show');
+  elements.calculator.style.display = 'none'; 
+  elements.closeCalculatorBtn.style.display = 'none';
 });
 
 // お気に入りボタン
