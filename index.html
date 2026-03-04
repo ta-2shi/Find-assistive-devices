@@ -400,51 +400,6 @@ cursor: not-allowed;
 opacity: 0.5;
 }
 
-.history-item {
-background: white;
-border-radius: 12px;
-padding: 16px;
-margin-bottom: 12px;
-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.history-item-date {
-font-size: 13px;
-color: #6b7280;
-margin-bottom: 4px;
-}
-
-.history-item-details {
-font-size: 14px;
-color: #374151;
-font-weight: 600;
-margin-bottom: 8px;
-}
-
-.history-item-summary {
-font-size: 13px;
-color: #6b7280;
-padding-top: 8px;
-border-top: 1px solid #e5e7eb;
-margin-top: 8px;
-}
-
-.history-restore-btn {
-background: #2563eb;
-color: white;
-border: none;
-padding: 6px 16px;
-border-radius: 6px;
-cursor: pointer;
-font-size: 13px;
-font-weight: 600;
-margin-top: 8px;
-}
-
-.history-restore-btn:hover {
-background: #1d4ed8;
-}
-
 .input-label {
 color: rgba(255, 255, 255, 0.9);
 font-size: 14px;
@@ -1262,19 +1217,16 @@ animation: spin 1s linear infinite;
     display: flex;
   }
 
- .close-btn {
-  position: sticky;  /* ← 追加 */
-  top: 0;  /* ← 追加 */
-  background: #6b7280;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  margin-bottom: 16px;
-  z-index: 10;  /* ← 追加 */
-}
+  .close-btn {
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
 
   .result-item {
     margin-bottom: 8px;
@@ -1350,62 +1302,6 @@ animation: spin 1s linear infinite;
     padding: 6px 12px;
     font-size: 12px;
   }
-/* モバイルオーバーレイ（iPhone対応） */
-  .mobile-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    height: 100dvh; /* iPhoneアドレスバー考慮 */
-    background: white;
-    z-index: 1000;
-    display: none;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* iOSスムーズスクロール */
-    padding-top: env(safe-area-inset-top); /* ノッチ対応 */
-  }
-
-  .mobile-overlay.active {
-    display: block;
-  }
-
-  .mobile-calculator-header {
-    position: sticky;
-    top: 0;
-    background: white;
-    padding: 16px;
-    padding-top: calc(16px + env(safe-area-inset-top)); /* ノッチ対応 */
-    border-bottom: 2px solid #e5e7eb;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .mobile-close-btn {
-    position: absolute;
-    top: 16px;
-    top: calc(16px + env(safe-area-inset-top)); /* ノッチ対応 */
-    right: 16px;
-    background: #6b7280;
-    color: white;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: bold;
-    z-index: 20;
-  }
-
-  .mobile-close-btn:active {
-    background: #4b5563;
-  }
 }
 </style>
 </head>
@@ -1421,7 +1317,6 @@ animation: spin 1s linear infinite;
 
 <div class="mode-toggle">
 <button class="mode-btn active" id="userMode">利用者モード</button>
-<button class="mode-btn" id="historyMode">履歴</button>
 <button class="mode-btn" id="adminMode">管理者モード</button>
 </div>
 
@@ -1480,11 +1375,6 @@ Excelファイルをアップロード
 <div class="search-container">
 <input type="text" class="search-input" id="searchInput" placeholder="福祉用具を検索...">
 <button class="search-clear-btn" id="searchClearBtn">×</button>
-</div>
-
-<div id="historySection" style="display: none; background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-<h3 style="color: white; margin-bottom: 16px;">保存された履歴</h3>
-<div id="historyList"></div>
 </div>
 
 <div class="favorite-section">
@@ -1817,56 +1707,14 @@ function loadRemarks() {
 // 入力時の自動保存（動的に生成される要素にはupdateCalculator内で設定済み）
   
 // モード切り替え
-elements.userModeBtn.addEventListener('click', () => {
-// モバイルのモーダルを閉じる
-const mobileOverlay = document.querySelector('.mobile-overlay');
-if (mobileOverlay) {
-mobileOverlay.classList.remove('active');
-}
-switchMode(false);
-});
+elements.userModeBtn.addEventListener('click', () => switchMode(false));
 elements.adminModeBtn.addEventListener('click', () => switchMode(true));
-
-// 履歴ボタン
-document.getElementById('historyMode').addEventListener('click', () => {
-document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-document.getElementById('historyMode').classList.add('active');
-
-elements.adminPanel.classList.remove('active');
-document.querySelector('.search-container').style.display = 'none';
-document.querySelector('.favorite-section').style.display = 'none';
-document.getElementById('searchResults').style.display = 'none';
-document.querySelector('.calculator').style.display = 'none';
-document.getElementById('historySection').style.display = 'block';
-
-loadHistory();
-});
 
 function switchMode(admin) {
 isAdminMode = admin;
 elements.userModeBtn.classList.toggle('active', !admin);
 elements.adminModeBtn.classList.toggle('active', admin);
 elements.adminPanel.classList.toggle('active', admin);
-
-// 履歴セクションを非表示
-document.getElementById('historySection').style.display = 'none';
-
-if (admin) {
-document.querySelector('.search-container').style.display = 'none';
-document.querySelector('.favorite-section').style.display = 'none';
-document.getElementById('searchResults').style.display = 'none';
-document.querySelector('.calculator').style.display = 'none';
-} else {
-document.querySelector('.search-container').style.display = 'block';
-document.querySelector('.favorite-section').style.display = 'block';
-document.getElementById('searchResults').style.display = 'block';
-// モバイルでは計算機を自動表示しない
-if (window.innerWidth >= 768) {
-  document.querySelector('.calculator').style.display = 'flex';
-} else {
-  document.querySelector('.calculator').style.display = 'none';
-}
-}
 
 // 検索結果を更新
 if (elements.searchInput.value.trim()) {
@@ -2680,15 +2528,13 @@ elements.clearAllTop.addEventListener('click', handleClearAll);
 
 // モバイル表示切り替え
 elements.toggleCalculatorBtn.addEventListener('click', () => {
-  elements.calculator.classList.add('show');
-  elements.calculator.style.display = 'flex';  
-  elements.closeCalculatorBtn.style.display = 'block';
+elements.calculator.classList.add('show');
+elements.closeCalculatorBtn.style.display = 'block';
 });
 
 elements.closeCalculatorBtn.addEventListener('click', () => {
-  elements.calculator.classList.remove('show');
-  elements.calculator.style.display = 'none'; 
-  elements.closeCalculatorBtn.style.display = 'none';
+elements.calculator.classList.remove('show');
+elements.closeCalculatorBtn.style.display = 'none';
 });
 
 // お気に入りボタン
@@ -2837,9 +2683,6 @@ const filename = `福祉用具レンタル搬入完了書_${currentDate.replace(
 
 // PDF保存
 pdf.save(filename);
-
-// 履歴に自動保存
-saveToHistory();
 
 } catch (error) {
 console.error('PDF生成エラー:', error);
@@ -3097,115 +2940,6 @@ setTimeout(clearStatus, 8000);
 function clearStatus() {
 elements.adminStatus.innerHTML = '';
 }
-
-// 履歴管理
-const HISTORY_KEY = 'pdfHistory';
-const MAX_HISTORY = 10;
-
-function saveToHistory() {
-if (selectedItems.length === 0) return;
-
-const historyItem = {
-id: Date.now(),
-timestamp: new Date().toISOString(),
-salesPerson: currentSalesPerson || '未設定',
-homeName: elements.homeNameInput.value.trim() || '',
-contractorName: elements.contractorNameInput.value.trim() || '',
-remarks: elements.remarksInput.value.trim() || '',
-burdenRate: burdenRate,
-selectedItems: selectedItems,
-};
-
-let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-history.unshift(historyItem);
-history = history.slice(0, MAX_HISTORY);
-localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-}
-
-function loadHistory() {
-const historyList = document.getElementById('historyList');
-const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-
-if (history.length === 0) {
-historyList.innerHTML = '<p style="color: rgba(255,255,255,0.7); text-align: center; padding: 40px;">まだ履歴がありません</p>';
-return;
-}
-
-historyList.innerHTML = history.map(item => {
-const date = new Date(item.timestamp);
-const formattedDate = `${date.getFullYear()}/${String(date.getMonth()+1).padStart(2,'0')}/${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-const itemCount = item.selectedItems.length;
-const totalPoints = item.selectedItems.reduce((sum, i) => {
-const total = i.points * i.quantity;
-return sum + (i.isHalfMonth ? total / 2 : total);
-}, 0);
-
-return `
-<div class="history-item">
-<div class="history-item-date">${formattedDate}</div>
-<div class="history-item-details">担当: ${item.salesPerson} | ${item.homeName || '事業所未入力'} | ${item.contractorName || '契約者未入力'}</div>
-<div class="history-item-summary">品目数: ${itemCount}件 | 合計: ${totalPoints.toLocaleString()}点</div>
-<button class="history-restore-btn" onclick="restoreFromHistory(${item.id})">復元</button>
-</div>
-`;
-}).join('');
-}
-
-function restoreFromHistory(id) {
-const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-const item = history.find(h => h.id === id);
-if (!item) return;
-
-selectedItems = JSON.parse(JSON.stringify(item.selectedItems));
-burdenRate = item.burdenRate;
-
-const homeInput = document.getElementById('homeNameInput');
-const contractorInput = document.getElementById('contractorNameInput');
-const remarksInput = document.getElementById('remarksInput');
-
-if (homeInput) homeInput.value = item.homeName;
-if (contractorInput) contractorInput.value = item.contractorName;
-if (remarksInput) remarksInput.value = item.remarks;
-
-document.querySelectorAll('.burden-btn').forEach(btn => {
-btn.classList.remove('active');
-if (parseFloat(btn.dataset.rate) === burdenRate) {
-btn.classList.add('active');
-}
-});
-
-updateCalculator();
-updateMobileCount();
-saveSelectedItems();
-
-// モバイルのモーダルを閉じる
-const mobileOverlay = document.querySelector('.mobile-overlay');
-if (mobileOverlay) {
-mobileOverlay.classList.remove('active');
-}
-
-  document.getElementById('userMode').click();
-  alert('履歴から復元しました！');
-}
-window.restoreFromHistory = restoreFromHistory;
-
-  // 画面サイズ変更時の対応
-window.addEventListener('resize', () => {
-  // 管理者モードでない場合のみ
-  if (!isAdminMode) {
-    const calculator = document.querySelector('.calculator');
-    if (window.innerWidth >= 768) {
-      // PC表示: 計算機を表示
-      calculator.style.display = 'flex';
-      calculator.classList.remove('show');
-    } else {
-      // モバイル表示: 計算機を非表示（ボタンから開く）
-      if (!calculator.classList.contains('show')) {
-        calculator.style.display = 'none';
-      }
-    }
-  }
-});
 
 // 担当者管理
 let currentSalesPerson = localStorage.getItem('salesPerson') || '';
