@@ -1741,21 +1741,24 @@ const worksheet = workbook.Sheets[firstSheetName];
 const data = XLSX.utils.sheet_to_json(worksheet, { header: ['name', 'points', 'category', 'taisCode'], range: 1 });
 
 const validData = data
-.filter(row => row.name && row.points)
-.map(row => ({
-name: String(row.name).trim(),
-points: parseInt(row.points) || 0,
-category: row.category ? String(row.category).trim() : '',
-taisCode: row.taisCode ? String(row.taisCode).trim() : ''
-}))
-.filter(item => item.name && item.points >= 0);
+  .filter(row => row.name && row.points)
+  .map(row => ({
+    name: String(row.name).trim(),
+    points: parseInt(row.points) || 0,
+    category: row.category ? String(row.category).trim() : '',
+    taisCode: row.taisCode ? String(row.taisCode).trim() : ''
+  }))
+  .filter(item => item.name && item.points >= 0);
+
+console.log(`📊 Excelファイルの総行数: ${data.length}行`);
+console.log(`✅ 有効なデータ: ${validData.length}件`);
+console.log(`❌ 除外されたデータ: ${data.length - validData.length}件`);
   
 if (validData.length === 0) {
-throw new Error('有効なデータが見つかりませんでした');
+  throw new Error('有効なデータが見つかりませんでした');
 }
-
 showInfo(`${validData.length}件のデータを保存中...`);
-
+  
 // 個別処理
 let addedCount = 0;
 let failedCount = 0;
