@@ -1758,24 +1758,37 @@ showInfo(`${validData.length}件のデータを保存中...`);
 
 // 個別処理
 let addedCount = 0;
-addedCount = 0;
-for (const item of validData) {
+let failedCount = 0;
+const failedItems = [];
+
+for (let i = 0; i < validData.length; i++) {
+  const item = validData[i];
   try {
     await FirebaseDB.addEquipment(item.name, item.points, item.category, item.taisCode);
     addedCount++;
     
-// 10件ごとに100ms待機（書き込み制限対策）
-if (addedCount % 10 === 0) {
-  await new Promise(resolve => setTimeout(resolve, 100));
-}
+    // 10件ごとに100ms待機（書き込み制限対策）
+    if (addedCount % 10 === 0) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     
-    if (addedCount % 100 === 0) {
+    if (addedCount % 50 === 0) {
       showInfo(`${addedCount}/${validData.length}件保存完了...`);
+      console.log(`✅ ${addedCount}件成功`);
     }
   } catch (error) {
-    console.error(`"${item.name}" の保存に失敗:`, error);
+    failedCount++;
+    failedItems.push({index: i + 2, name: item.name, error: error.message});
+    console.error(`❌ ${i + 2}行目（${item.name}）の保存に失敗:`, error);
   }
-} 
+}
+
+console.log('=== アップロード完了 ===');
+console.log(`✅ 成功: ${addedCount}件`);
+console.log(`❌ 失敗: ${failedCount}件`);
+if (failedItems.length > 0) {
+  console.log('失敗したデータ:', failedItems);
+}
   
 // データを再読み込み
 await loadEquipmentData();
