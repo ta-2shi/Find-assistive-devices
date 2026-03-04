@@ -1748,8 +1748,8 @@ points: parseInt(row.points) || 0,
 category: row.category ? String(row.category).trim() : '',
 taisCode: row.taisCode ? String(row.taisCode).trim() : ''
 }))
-.filter(item => item.name && item.points > 0);
-
+.filter(item => item.name && item.points >= 0);
+  
 if (validData.length === 0) {
 throw new Error('有効なデータが見つかりませんでした');
 }
