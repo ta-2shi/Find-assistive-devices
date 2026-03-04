@@ -1764,10 +1764,10 @@ for (const item of validData) {
     await FirebaseDB.addEquipment(item.name, item.points, item.category, item.taisCode);
     addedCount++;
     
-    // 10件ごとに100ms待機（書き込み制限対策）
-    if (addedCount % 10 === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+// 5件ごとに500ms待機（書き込み制限対策）
+if (addedCount % 5 === 0) {
+  await new Promise(resolve => setTimeout(resolve, 500));
+}
     
     if (addedCount % 100 === 0) {
       showInfo(`${addedCount}/${validData.length}件保存完了...`);
