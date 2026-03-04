@@ -1741,7 +1741,7 @@ const worksheet = workbook.Sheets[firstSheetName];
 const data = XLSX.utils.sheet_to_json(worksheet, { header: ['name', 'points', 'category', 'taisCode'], range: 1 });
 
 const validData = data
-  .filter(row => row.name && row.points)
+  .filter(row => row.name && (row.points !== undefined && row.points !== null && row.points !== ''))
   .map(row => ({
     name: String(row.name).trim(),
     points: parseInt(row.points) || 0,
