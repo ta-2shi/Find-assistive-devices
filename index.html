@@ -14,19 +14,20 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
   import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
   
-  // Firebase設定
- const firebaseConfig = {
+// Firebase設定
+const firebaseConfig = {
   apiKey: "AIzaSyCCimCmljrCfAlEHU1Fk3zZVYm7XSvyyV4",
   authDomain: "find-assistive-devices-apps.firebaseapp.com",
+  databaseURL: "https://find-assistive-devices-apps-default-rtdb.firebaseio.com",  // ← 追加
   projectId: "find-assistive-devices-apps",
   storageBucket: "find-assistive-devices-apps.firebasestorage.app",
   messagingSenderId: "474642604597",
   appId: "1:474642604597:web:5b353b489bac360ba7477c"
 };
 
-  // Firebase 初期化
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+// Firebase 初期化
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);  // ← getFirestore から getDatabase に変更
   
   // グローバルスコープに公開
   window.db = db;
