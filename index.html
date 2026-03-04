@@ -173,6 +173,11 @@ box-shadow: 0 6px 20px rgba(236, 72, 153, 0.3);
 background: #fdf2f8;
 }
 
+.favorite-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 20px rgba(236, 72, 153, 0.3);
+}
+
 .favorite-btn:active {
 transform: translateY(0);
 }
@@ -287,117 +292,6 @@ align-items: end;
 .input-group {
 display: flex;
 flex-direction: column;
-}
-
-/* 担当者表示ヘッダー */
-.sales-person-header {
-text-align: center;
-padding: 10px;
-background: rgba(37, 99, 235, 0.1);
-border-radius: 8px;
-margin-top: 12px;
-font-size: 14px;
-color: #1e293b;
-font-weight: 600;
-}
-
-.change-btn {
-background: #2563eb;
-color: white;
-border: none;
-padding: 4px 12px;
-border-radius: 6px;
-cursor: pointer;
-font-size: 12px;
-margin-left: 8px;
-transition: all 0.2s ease;
-}
-
-.change-btn:hover {
-background: #1d4ed8;
-transform: translateY(-1px);
-}
-
-/* モーダル */
-.modal {
-display: none;
-position: fixed;
-z-index: 10000;
-left: 0;
-top: 0;
-width: 100%;
-height: 100%;
-background: rgba(0, 0, 0, 0.7);
-backdrop-filter: blur(5px);
-}
-
-.modal.active {
-display: flex;
-align-items: center;
-justify-content: center;
-}
-
-.modal-content {
-background: white;
-padding: 40px;
-border-radius: 16px;
-max-width: 400px;
-width: 90%;
-box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-animation: modalSlideIn 0.3s ease;
-}
-
-@keyframes modalSlideIn {
-from {
-opacity: 0;
-transform: translateY(-20px);
-}
-to {
-opacity: 1;
-transform: translateY(0);
-}
-}
-
-.sales-person-select {
-width: 100%;
-padding: 14px;
-border: 2px solid #e5e7eb;
-border-radius: 8px;
-font-size: 16px;
-margin-bottom: 20px;
-background: white;
-cursor: pointer;
-transition: all 0.2s ease;
-}
-
-.sales-person-select:focus {
-outline: none;
-border-color: #2563eb;
-box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.confirm-btn {
-width: 100%;
-background: linear-gradient(45deg, #2563eb, #1d4ed8);
-color: white;
-border: none;
-padding: 14px;
-border-radius: 8px;
-cursor: pointer;
-font-weight: 600;
-font-size: 16px;
-transition: all 0.3s ease;
-}
-
-.confirm-btn:hover:not(:disabled) {
-transform: translateY(-2px);
-box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-}
-
-.confirm-btn:disabled {
-background: #9ca3af;
-cursor: not-allowed;
-opacity: 0.5;
 }
 
 .input-label {
@@ -939,7 +833,7 @@ min-height: 80px;
 padding: 12px;
 border: 2px solid #e5e7eb;
 border-radius: 8px;
-font-size: 16px;
+font-size: 14px;
 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 resize: vertical;
 transition: all 0.3s ease;
@@ -1309,11 +1203,6 @@ animation: spin 1s linear infinite;
 <div class="container">
 <div class="header">
 <h1 class="title">福祉用具点数計算アプリ</h1>
-
-<div id="salesPersonHeader" class="sales-person-header" style="display: none;">
-担当：<span id="currentSalesPerson"></span>
-<button id="changeSalesPersonBtn" class="change-btn">変更</button>
-</div>
 
 <div class="mode-toggle">
 <button class="mode-btn active" id="userMode">利用者モード</button>
@@ -2368,14 +2257,15 @@ summaryHTML += `
 <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
 <div class="remarks-section">
 <label class="remarks-label" for="homeNameInput">事業所名</label>
-<input type="text" class="remarks-textarea" id="homeNameInput" placeholder="事業所名を入力してください..." style="min-height: 40px; padding: 10px; font-size: 16px;">
+<input type="text" class="remarks-textarea" id="homeNameInput" placeholder="事業所名を入力してください..." style="min-height: 40px; padding: 10px;">
+</div>
 <div class="remarks-section">
 <label class="remarks-label" for="contractorNameInput">契約者名</label>
-<input type="text" class="remarks-textarea" id="contractorNameInput" placeholder="契約者名を入力してください..." style="min-height: 40px; padding: 10px; font-size: 16px;">
+<input type="text" class="remarks-textarea" id="contractorNameInput" placeholder="契約者名を入力してください..." style="min-height: 40px; padding: 10px;">
 </div>
 <div class="remarks-section">
 <label class="remarks-label" for="remarksInput">備考</label>
-<textarea class="remarks-textarea" id="remarksInput" placeholder="備考を入力してください..." style="font-size: 16px;"></textarea>
+<textarea class="remarks-textarea" id="remarksInput" placeholder="備考を入力してください..."></textarea>
 </div>
 </div>
 `;
@@ -2748,7 +2638,7 @@ const unit = item.isActualCost ? '円' : '点';
     
 return `
 <tr style="border-bottom: 1px solid #e5e7eb;">
-<td style="padding: 8px; text-align: center; border-right: 1px solid #e5e7eb;">${startIndex + index + 1}</td>
+<td style="padding: 12px; text-align: center; border-right: 1px solid #e5e7eb;">${startIndex + index + 1}</td>
 <td style="padding: 12px; border-right: 1px solid #e5e7eb;">
 <div style="font-weight: 600;">${categoryDisplay}</div>
 </td>
@@ -2773,7 +2663,7 @@ const burdenRateText = burdenRate === 1 ? '1割負担' : burdenRate === 2 ? '2�
 
 // 署名欄と文言のHTML
 const signatureAndFooter = `
-<div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #374151;">
+<div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #374151;">
 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 30px;">
 <div style="flex: 1; max-width: 400px;">
 ${remarks ? `
@@ -2820,29 +2710,25 @@ const logoHTML = logoData[selectedLogo] ? `
 // 1ページ目のHTML
 let page1HTML = `
 <div class="pdf-page" style="max-width: 714px; margin: 0 auto; background: white; page-break-after: always;">
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
 <div style="flex: 1;"></div>
-<h1 style="flex: 2; text-align: center; font-size: 22px; font-weight: bold; color: #1e293b; margin: 0;">福祉用具レンタル搬入完了書</h1>
+<h1 style="flex: 2; text-align: center; font-size: 24px; font-weight: bold; color: #1e293b; margin: 0;">福祉用具レンタル搬入完了書</h1>
 <div style="flex: 1; text-align: right;">
 ${logoHTML}
 </div>
 </div>
 
-<div style="margin-bottom: 12px; font-size: 13px; color: #374151; display: flex; justify-content: space-between; align-items: center;">
+<div style="margin-bottom: 30px; font-size: 14px; color: #374151; display: flex; justify-content: space-between; align-items: center;">
 <div>事業所名　${homeName}　様</div>
 <div>契約者　${contractorName}　様</div>
 </div>
 
-<div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: #6b7280;">
+<div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px; color: #6b7280;">
 <div>作成日: ${currentDate}</div>
 <div style="font-weight: 600; color: #2563eb;">${topSummaryHTML}</div>
 </div>
 
-<div style="text-align: center; margin-bottom: 12px; font-size: 13px; color: #374151;">
-担当：<span style="display: inline-block; border-bottom: 1px solid #374151; min-width: 200px; padding: 0 10px; font-weight: 600;">${currentSalesPerson || '　　　　　　　　'}</span>
-</div>
-
-<table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 13px;">
+<table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 14px;">
 <thead>
 <tr style="background: #f8fafc; border-bottom: 2px solid #374151;">
 <th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">No.</th>
@@ -2882,7 +2768,7 @@ ${logoHTML}
 <table style="width: 100%; border-collapse: collapse; border: 2px solid #374151; font-size: 14px;">
 <thead>
 <tr style="background: #f8fafc; border-bottom: 2px solid #374151;">
-<th style="padding: 8px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">No.</th>
+<th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">No.</th>
 <th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">品目</th>
 <th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">商品名</th>
 <th style="padding: 12px; text-align: center; border-right: 1px solid #374151; font-weight: bold;">単価</th>
@@ -2941,86 +2827,11 @@ function clearStatus() {
 elements.adminStatus.innerHTML = '';
 }
 
-// 担当者管理
-let currentSalesPerson = localStorage.getItem('salesPerson') || '';
-
-function initSalesPersonModal() {
-const modal = document.getElementById('salesPersonModal');
-const select = document.getElementById('salesPersonSelect');
-const confirmBtn = document.getElementById('confirmSalesPersonBtn');
-const changeSalesPersonBtn = document.getElementById('changeSalesPersonBtn');
-const salesPersonHeader = document.getElementById('salesPersonHeader');
-const currentSalesPersonSpan = document.getElementById('currentSalesPerson');
-
-// 担当者が未設定の場合はモーダルを表示
-if (!currentSalesPerson) {
-modal.classList.add('active');
-} else {
-// 既に設定されている場合はヘッダーに表示
-salesPersonHeader.style.display = 'block';
-currentSalesPersonSpan.textContent = currentSalesPerson;
-}
-
-// 選択時にボタンを有効化
-select.addEventListener('change', () => {
-confirmBtn.disabled = !select.value;
-});
-
-// 決定ボタン
-confirmBtn.addEventListener('click', () => {
-const selectedPerson = select.value;
-if (selectedPerson) {
-currentSalesPerson = selectedPerson;
-localStorage.setItem('salesPerson', selectedPerson);
-modal.classList.remove('active');
-salesPersonHeader.style.display = 'block';
-currentSalesPersonSpan.textContent = selectedPerson;
-}
-});
-
-// 変更ボタン
-changeSalesPersonBtn.addEventListener('click', () => {
-select.value = currentSalesPerson;
-confirmBtn.disabled = false;
-modal.classList.add('active');
-});
-}
-  
 // アプリケーション初期化
 window.addEventListener('load', () => {
 // Firebase が読み込まれるまで少し待つ
-setTimeout(() => {
-initializeApp();
-initSalesPersonModal(); // 
-}, 1000);
+setTimeout(initializeApp, 1000);
 });
 </script>
-
-<!-- 担当者選択モーダル -->
-<div id="salesPersonModal" class="modal">
-<div class="modal-content">
-<h2 style="margin-bottom: 20px; color: #1e293b;">担当者を選択してください</h2>
-<select id="salesPersonSelect" class="sales-person-select">
-<option value="">選択してください</option>
-<option value="斎藤　雅俊">斎藤　雅俊</option>
-<option value="山村　洋平">山村　洋平</option>
-<option value="福岡　文彦">福岡　文彦</option>
-<option value="白川　研">白川　研</option>
-<option value="田端　大祐">田端　大祐</option>
-<option value="片岡　芳文">片岡　芳文</option>
-<option value="岩井　尚輝">岩井　尚輝</option>
-<option value="西澤　拓実">西澤　拓実</option>
-<option value="北村　勇太郎">北村　勇太郎</option>
-<option value="塚本　尚文">塚本　尚文</option>
-<option value="三好　亮平">三好　亮平</option>
-<option value="高尾　暢">高尾　暢</option>
-<option value="正田　丈晴">正田　丈晴</option>
-<option value="坂本　匡克">坂本　匡克</option>
-<option value="正治　貴之">正治　貴之</option>
-</select>
-<button id="confirmSalesPersonBtn" class="confirm-btn" disabled>決定</button>
-</div>
-</div>
-  
 </body>
 </html>
