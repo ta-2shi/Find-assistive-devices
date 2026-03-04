@@ -1768,18 +1768,23 @@ showError('高速保存に失敗しました。個別保存に切り替えます
 // フォールバック：個別処理
 addedCount = 0;
 for (const item of validData) {
-try {
-await FirebaseDB.addEquipment(item.name, item.points, item.category, item.taisCode);
-addedCount++;
-if (addedCount % 100 === 0) {
-showInfo(`${addedCount}/${validData.length}件保存完了...`);
+  try {
+    await FirebaseDB.addEquipment(item.name, item.points, item.category, item.taisCode);
+    addedCount++;
+    
+    // 10件ごとに100ms待機（書き込み制限対策）
+    if (addedCount % 10 === 0) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    if (addedCount % 100 === 0) {
+      showInfo(`${addedCount}/${validData.length}件保存完了...`);
+    }
+  } catch (error) {
+    console.error(`"${item.name}" の保存に失敗:`, error);
+  }
 }
-} catch (error) {
-console.error(`"${item.name}" の保存に失敗:`, error);
-}
-}
-}
-
+  
 // データを再読み込み
 await loadEquipmentData();
 await updateDatabaseCount(); // 件数も更新
