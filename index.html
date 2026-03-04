@@ -11,8 +11,9 @@
 
 <!-- Firebase SDK -->
 <script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
-  import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+　import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
+　import { getDatabase, ref, get, set, push, remove, update, child } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js';
+
   
 // Firebase設定
 const firebaseConfig = {
