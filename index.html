@@ -1193,12 +1193,15 @@ animation: spin 1s linear infinite;
     padding: 2px;
   }
 
-  .mode-btn {
+ .mode-btn {
   flex: 1 1 calc(50% - 4px);
-  min-width: 120px;
-  padding: 10px 8px;
-  font-size: 11px;
+  max-width: calc(50% - 4px);
+  padding: 10px 6px;
+  font-size: 10px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
   .search-container {
     margin-bottom: 8px;
