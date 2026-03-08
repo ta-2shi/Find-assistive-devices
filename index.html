@@ -1404,6 +1404,37 @@ Excelファイルをアップロード
   </div>
 </div>
 
+<!-- 復活の呪文セクション -->
+<div class="spell-section" id="spellSection" style="display: none;">
+  <div class="spell-header" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+    <h2 style="color: rgba(255,255,255,0.9); margin: 0 0 8px 0; font-size: 20px;">🔮 復活の呪文</h2>
+    <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 14px;">他の端末にデータを共有できます</p>
+  </div>
+  
+  <!-- 呪文を生成 -->
+  <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+    <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #1e293b;">呪文を生成</h3>
+    <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">現在選択中の品目から呪文を作成します</p>
+    <button id="generateSpellBtn" style="width: 100%; background: linear-gradient(45deg, #8b5cf6, #7c3aed); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+      呪文を生成
+    </button>
+    <textarea id="spellOutput" readonly style="width: 100%; min-height: 100px; margin-top: 12px; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: monospace; font-size: 12px; display: none;"></textarea>
+    <button id="copySpellBtn" style="width: 100%; background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; margin-top: 8px; display: none;">
+      📋 コピー
+    </button>
+  </div>
+  
+  <!-- 呪文から復元 -->
+  <div style="background: white; border-radius: 12px; padding: 20px;">
+    <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #1e293b;">呪文から復元</h3>
+    <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">呪文を貼り付けてデータを復元します</p>
+    <textarea id="spellInput" placeholder="ここに呪文を貼り付けてください..." style="width: 100%; min-height: 100px; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: monospace; font-size: 12px; font-size: 16px;"></textarea>
+    <button id="restoreSpellBtn" style="width: 100%; background: linear-gradient(45deg, #f59e0b, #d97706); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; margin-top: 8px;">
+      復元
+    </button>
+  </div>
+</div>
+  
 <div class="main-content"> 
 
 <div class="search-container">
