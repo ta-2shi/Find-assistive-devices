@@ -3164,8 +3164,16 @@ function restoreFromHistory(id) {
     if (remarksInput) remarksInput.value = item.remarks || '';
   }, 100);
   
-  // 利用者モードに切り替え
+// 利用者モードに切り替え
   document.getElementById('userMode').click();
+  
+  // モバイルの場合、計算機の状態をリセット
+  if (window.innerWidth < 768) {
+    const calculator = document.querySelector('.calculator');
+    calculator.style.display = 'none';
+    calculator.classList.remove('show');
+  }
+  
   alert('履歴から復元しました！');
 }
 
