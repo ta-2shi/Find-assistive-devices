@@ -1868,6 +1868,11 @@ document.getElementById('historyMode').addEventListener('click', () => {
   document.getElementById('searchResults').style.display = 'none';
   document.querySelector('.calculator').style.display = 'none';
   
+  // モバイルの「計算結果を表示」ボタンを非表示
+  if (elements.toggleCalculatorBtn) {
+    elements.toggleCalculatorBtn.style.display = 'none';
+  }
+  
   // 履歴セクションを表示
   document.getElementById('historySection').style.display = 'block';
   
