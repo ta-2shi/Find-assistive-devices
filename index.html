@@ -3065,7 +3065,7 @@ function loadHistory() {
     `;
   }).join('');
 }
-
+  
 function restoreFromHistory(id) {
   const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
   const item = history.find(h => h.id === id);
@@ -3073,15 +3073,6 @@ function restoreFromHistory(id) {
   
   selectedItems = JSON.parse(JSON.stringify(item.selectedItems));
   burdenRate = item.burdenRate;
-  
-  // 入力欄に値を設定（null チェック）
-  const homeInput = document.getElementById('homeNameInput');
-  const contractorInput = document.getElementById('contractorNameInput');
-  const remarksInput = document.getElementById('remarksInput');
-  
-  if (homeInput) homeInput.value = item.homeName;
-  if (contractorInput) contractorInput.value = item.contractorName;
-  if (remarksInput) remarksInput.value = item.remarks;
   
   document.querySelectorAll('.burden-btn').forEach(btn => {
     btn.classList.remove('active');
@@ -3093,6 +3084,17 @@ function restoreFromHistory(id) {
   updateCalculator();
   updateMobileCount();
   saveSelectedItems();
+  
+  // updateCalculator() の後に入力欄が生成されるので、少し待ってから値を設定
+  setTimeout(() => {
+    const homeInput = document.getElementById('homeNameInput');
+    const contractorInput = document.getElementById('contractorNameInput');
+    const remarksInput = document.getElementById('remarksInput');
+    
+    if (homeInput) homeInput.value = item.homeName || '';
+    if (contractorInput) contractorInput.value = item.contractorName || '';
+    if (remarksInput) remarksInput.value = item.remarks || '';
+  }, 100);
   
   // 利用者モードに切り替え
   document.getElementById('userMode').click();
