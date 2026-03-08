@@ -2639,6 +2639,9 @@ if (selectedItems.length === 0) {
 alert('印刷する品目がありません。まず福祉用具を選択してください。');
 return;
 }
+
+// 履歴に保存
+saveToHistory(); 
   
 // 前回の選択を復元
 try {
