@@ -1724,18 +1724,60 @@ function loadRemarks() {
 elements.userModeBtn.addEventListener('click', () => switchMode(false));
 elements.adminModeBtn.addEventListener('click', () => switchMode(true));
 
-function switchMode(admin) {
-isAdminMode = admin;
-elements.userModeBtn.classList.toggle('active', !admin);
-elements.adminModeBtn.classList.toggle('active', admin);
-elements.adminPanel.classList.toggle('active', admin);
+// 履歴ボタン
+document.getElementById('historyMode').addEventListener('click', () => {
+  // 全モードボタンを非アクティブに
+  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+  // 履歴ボタンをアクティブに
+  document.getElementById('historyMode').classList.add('active');
+  
+  // 全セクションを非表示
+  elements.adminPanel.classList.remove('active');
+  document.querySelector('.search-container').style.display = 'none';
+  document.querySelector('.favorite-section').style.display = 'none';
+  document.getElementById('searchResults').style.display = 'none';
+  document.querySelector('.calculator').style.display = 'none';
+  
+  // 履歴セクションを表示
+  document.getElementById('historySection').style.display = 'block';
+  
+  // 履歴を読み込み
+  loadHistory();
+});
 
-// 検索結果を更新
-if (elements.searchInput.value.trim()) {
-performSearch(elements.searchInput.value);
-} else {
-showEmptySearchState();
-}
+function switchMode(admin) {
+  isAdminMode = admin;
+  elements.userModeBtn.classList.toggle('active', !admin);
+  elements.adminModeBtn.classList.toggle('active', admin);
+  elements.adminPanel.classList.toggle('active', admin);
+  
+  // 履歴セクションを非表示
+  document.getElementById('historySection').style.display = 'none';
+  
+  if (admin) {
+    document.querySelector('.search-container').style.display = 'none';
+    document.querySelector('.favorite-section').style.display = 'none';
+    document.getElementById('searchResults').style.display = 'none';
+    document.querySelector('.calculator').style.display = 'none';
+  } else {
+    document.querySelector('.search-container').style.display = 'block';
+    document.querySelector('.favorite-section').style.display = 'block';
+    document.getElementById('searchResults').style.display = 'block';
+    
+    // モバイルでは計算機を自動表示しない
+    if (window.innerWidth >= 768) {
+      document.querySelector('.calculator').style.display = 'flex';
+    } else {
+      document.querySelector('.calculator').style.display = 'none';
+    }
+  }
+  
+  // 検索結果を更新
+  if (elements.searchInput.value.trim()) {
+    performSearch(elements.searchInput.value);
+  } else {
+    showEmptySearchState();
+  }
 }
 
 // Excel ファイルアップロード
