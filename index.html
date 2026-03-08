@@ -1754,17 +1754,16 @@ function switchMode(admin) {
   // 履歴セクションを非表示
   document.getElementById('historySection').style.display = 'none';
   
+  // 検索窓とお気に入りは常に表示
+  document.querySelector('.search-container').style.display = 'block';
+  document.querySelector('.favorite-section').style.display = 'block';
+  document.getElementById('searchResults').style.display = 'block';
+  
   if (admin) {
-    document.querySelector('.search-container').style.display = 'none';
-    document.querySelector('.favorite-section').style.display = 'none';
-    document.getElementById('searchResults').style.display = 'none';
+    // 管理者モードでは計算機を非表示
     document.querySelector('.calculator').style.display = 'none';
   } else {
-    document.querySelector('.search-container').style.display = 'block';
-    document.querySelector('.favorite-section').style.display = 'block';
-    document.getElementById('searchResults').style.display = 'block';
-    
-    // モバイルでは計算機を自動表示しない
+    // 利用者モードでは計算機を表示（モバイルは除く）
     if (window.innerWidth >= 768) {
       document.querySelector('.calculator').style.display = 'flex';
     } else {
@@ -1779,7 +1778,7 @@ function switchMode(admin) {
     showEmptySearchState();
   }
 }
-
+  
 // Excel ファイルアップロード
 elements.fileInput.addEventListener('change', handleFileUpload);
 
