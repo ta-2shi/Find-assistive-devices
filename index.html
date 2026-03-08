@@ -2648,29 +2648,41 @@ function handleClearAll() {
   
   // カスタム削除確認モーダルを表示
   const modal = document.getElementById('confirmDeleteModal');
-  modal.classList.add('active');
-}
-
-// 削除確認モーダルのボタン処理
-document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-  selectedItems = [];
-  // 入力欄は動的に生成されるため、sessionStorageをクリア
-  sessionStorage.removeItem('homeName');
-  sessionStorage.removeItem('contractorName');
-  sessionStorage.removeItem('remarksText');
-  updateCalculator();
-  updateMobileCount();
-  saveSelectedItems();
-  displaySearchResults(filteredItems);
+  const confirmBtn = document.getElementById('confirmDeleteBtn');
+  const cancelBtn = document.getElementById('cancelDeleteBtn');
   
-  // モーダルを閉じる
-  document.getElementById('confirmDeleteModal').classList.remove('active');
-});
-
-document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
-  // モーダルを閉じる
-  document.getElementById('confirmDeleteModal').classList.remove('active');
-});
+  // モーダルを表示
+  modal.classList.add('active');
+  
+  // 削除ボタンのイベント（一度だけ実行）
+  const handleConfirm = () => {
+    selectedItems = [];
+    sessionStorage.removeItem('homeName');
+    sessionStorage.removeItem('contractorName');
+    sessionStorage.removeItem('remarksText');
+    updateCalculator();
+    updateMobileCount();
+    saveSelectedItems();
+    displaySearchResults(filteredItems);
+    modal.classList.remove('active');
+    
+    // イベントリスナーを削除
+    confirmBtn.removeEventListener('click', handleConfirm);
+    cancelBtn.removeEventListener('click', handleCancel);
+  };
+  
+  // キャンセルボタンのイベント
+  const handleCancel = () => {
+    modal.classList.remove('active');
+    
+    // イベントリスナーを削除
+    confirmBtn.removeEventListener('click', handleConfirm);
+    cancelBtn.removeEventListener('click', handleCancel);
+  };
+  
+  confirmBtn.addEventListener('click', handleConfirm);
+  cancelBtn.addEventListener('click', handleCancel);
+}
 
 // 上部の全削除ボタン
 elements.clearAllTop.addEventListener('click', handleClearAll);
