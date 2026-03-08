@@ -1316,8 +1316,9 @@ animation: spin 1s linear infinite;
 </div>
 
 <div class="mode-toggle">
-<button class="mode-btn active" id="userMode">利用者モード</button>
-<button class="mode-btn" id="adminMode">管理者モード</button>
+  <button class="mode-btn active" id="userMode">利用者モード</button>
+  <button class="mode-btn" id="adminMode">管理者モード</button>
+  <button class="mode-btn" id="historyMode">📜 履歴</button>
 </div>
 
 <div class="admin-panel" id="adminPanel">
@@ -1368,9 +1369,22 @@ Excelファイルをアップロード
 <button class="clear-database-btn" id="clearDatabaseBtn">データベース全クリア</button>
 </div>
 
-<div id="adminStatus"></div>
+ <div id="adminStatus"></div>
+  </div>
 </div>
+
+<!-- 履歴セクション -->
+<div class="history-section" id="historySection" style="display: none;">
+  <div class="history-header" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+    <h2 style="color: rgba(255,255,255,0.9); margin: 0 0 8px 0; font-size: 20px;">📜 保存履歴</h2>
+    <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 14px;">最大10件まで自動保存されます（端末に保存）</p>
+  </div>
+  <div class="history-list" id="historyList">
+    <!-- ここに履歴が表示されます -->
+  </div>
 </div>
+
+<div class="main-content"> 
 
 <div class="search-container">
 <input type="text" class="search-input" id="searchInput" placeholder="福祉用具を検索...">
