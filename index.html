@@ -3071,9 +3071,14 @@ function restoreFromHistory(id) {
   selectedItems = JSON.parse(JSON.stringify(item.selectedItems));
   burdenRate = item.burdenRate;
   
-  elements.homeNameInput.value = item.homeName;
-  elements.contractorNameInput.value = item.contractorName;
-  elements.remarksInput.value = item.remarks;
+  // 入力欄に値を設定（null チェック）
+  const homeInput = document.getElementById('homeNameInput');
+  const contractorInput = document.getElementById('contractorNameInput');
+  const remarksInput = document.getElementById('remarksInput');
+  
+  if (homeInput) homeInput.value = item.homeName;
+  if (contractorInput) contractorInput.value = item.contractorName;
+  if (remarksInput) remarksInput.value = item.remarks;
   
   document.querySelectorAll('.burden-btn').forEach(btn => {
     btn.classList.remove('active');
