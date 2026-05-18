@@ -10,9 +10,15 @@
 <title>福祉用具点数計算アプリ</title>
 
 <!-- Firebase SDK -->
+
+<script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore-compat.js"></script>
+
+<!-- pako圧縮ライブラリ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
-  import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+  import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, where, writeBatch } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';  
   
   // Firebase設定
  const firebaseConfig = {
@@ -30,7 +36,7 @@
   
   // グローバルスコープに公開
   window.db = db;
-  window.firestore = { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch };
+　window.firestore = { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, where, writeBatch };
 </script>
 
 <style>
@@ -73,50 +79,37 @@ margin-bottom: 16px;
 text-align: center;
 }
 
-.mode-toggle {
-display: flex;
-gap: 8px;
-margin-bottom: 20px;
-background: rgba(255, 255, 255, 0.1);
-border-radius: 12px;
-padding: 4px;
-}
-
-/* モードボタンのシンプルスタイル */
-.mode-btn {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.5);
-  color: rgba(255, 255, 255, 1);
-  border: 2px solid rgba(255, 255, 255, 0.7);
-  padding: 12px 16px;
+/* ハンバーガーメニュー */
+#hamburgerBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
 }
 
-/* モードボタンのシンプルスタイル */
-.mode-btn {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  padding: 12px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.mode-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.mode-btn.active {
+/* ドロワーメニューアイテム */
+.drawer-menu-item {
+  width: 100%;
+  padding: 16px 20px;
   background: white;
-  color: #2563eb;
-  border-color: white;
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.drawer-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.drawer-menu-item.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
 }
 
 /* 履歴セクションと管理者パネルの文字色 */
@@ -1416,26 +1409,68 @@ animation: spin 1s linear infinite;
 <button id="changeSalesPersonBtn" class="change-btn">変更</button>
 </div>
 
-<div class="mode-toggle">
-  <button class="mode-btn active" id="userMode">利用者モード</button>
-  <button class="mode-btn" id="adminMode">管理者モード</button>
-  <button class="mode-btn" id="historyMode">履歴</button>
-  <button class="mode-btn" id="spellMode">🔮 復活の呪文</button>
+<!-- ハンバーガーメニューボタン -->
+<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+  <button id="hamburgerBtn" style="background: none; border: none; font-size: 28px; cursor: pointer; padding: 8px; color: #1e293b;">
+    ☰
+  </button>
+  <div style="flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: #1e293b;">
+    <span id="currentModeName">利用者モード</span>
+  </div>
+</div>
+
+<!-- ドロワーメニュー -->
+<div id="drawerOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;" onclick="closeDrawer()"></div>
+
+<div id="drawerMenu" style="position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: white; z-index: 1000; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); overflow-y: auto;">
+  <div style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <h2 style="margin: 0; font-size: 20px;">メニュー</h2>
+  </div>
+  
+  <div style="padding: 10px 0;">
+  <button class="drawer-menu-item active" id="drawerUserMode" onclick="switchToMode('user')">
+    <span style="font-size: 20px; margin-right: 12px;">👤</span>
+    利用者モード
+  </button>
+  
+  <button class="drawer-menu-item" id="drawerHistoryMode" onclick="switchToMode('history')">
+    <span style="font-size: 20px; margin-right: 12px;">📜</span>
+    履歴
+  </button>
+  
+  <button class="drawer-menu-item" id="drawerSpellMode" onclick="switchToMode('spell')">
+    <span style="font-size: 20px; margin-right: 12px;">💾</span>
+    共有・保存
+  </button>
+  
+  <button class="drawer-menu-item" id="drawerAdminMode" onclick="switchToMode('admin')">
+    <span style="font-size: 20px; margin-right: 12px;">👨‍💼</span>
+    管理者モード
+  </button>
+</div>
 </div>
 
 <div class="admin-panel" id="adminPanel">
-<div class="database-info" style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
-<div style="display: flex; justify-content: space-between; align-items: center;">
-<div>
-<h3 style="color: rgba(255, 255, 255, 0.9); margin: 0 0 5px 0; font-size: 16px;">データベース情報</h3>
-<p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 14px;">登録件数: <span id="dbCount" style="color: #10b981; font-weight: 600;">読み込み中...</span></p>
-</div>
-<button class="refresh-count-btn" id="refreshCountBtn" style="background: linear-gradient(45deg, #6366f1, #4f46e5); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
-更新
-</button>
-</div>
-</div>
-
+  <div class="database-info" style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <div>
+        <h3 style="color: rgba(255, 255, 255, 0.9); margin: 0 0 5px 0; font-size: 16px;">データベース情報</h3>
+        <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 14px;">登録件数: <span id="dbCount" style="color: #10b981; font-weight: 600;">読み込み中...</span></p>
+      </div>
+      <button class="refresh-count-btn" id="refreshCountBtn" style="background: linear-gradient(45deg, #6366f1, #4f46e5); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+        更新
+      </button>
+    </div>
+    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+      <p style="color: rgba(255, 255, 255, 0.7); margin: 0 0 10px 0; font-size: 13px;">
+        最終更新: <span id="cacheUpdateTime" style="color: #10b981; font-weight: 600;">-</span>
+      </p>
+      <button id="updateDataBtn" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;">
+        📥 データを更新
+      </button>
+    </div>
+  </div>
+  
 <div class="upload-section">
 <div class="file-upload-container">
 <input type="file" class="file-input" id="fileInput" accept=".xlsx,.xls">
@@ -1486,35 +1521,91 @@ Excelファイルをアップロード
   </div>
 </div>
 
-<!-- 復活の呪文セクション -->
-<div class="spell-section" id="spellSection" style="display: none;">
-  <div class="spell-header" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-    <h2 style="color: rgba(255,255,255,0.9); margin: 0 0 8px 0; font-size: 20px;">🔮 復活の呪文</h2>
-    <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 14px;">他の端末にデータを共有できます</p>
+<!-- 共有・バックアップセクション -->
+<div id="spellSection" style="display: none; max-width: 600px; margin: 0 auto; padding: 20px;">
+  
+  <!-- 共有コード（メイン機能） -->
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);">
+    <h2 style="color: white; margin: 0 0 20px 0; font-size: 20px; display: flex; align-items: center; gap: 8px;">
+      🔗 共有コード
+    </h2>
+    
+    <!-- コードから復元（上に移動） -->
+    <div style="background: rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 20px; margin-bottom: 20px; backdrop-filter: blur(10px);">
+      <h3 style="color: white; margin: 0 0 12px 0; font-size: 16px;">📥 コードから復元</h3>
+      <p style="color: rgba(255, 255, 255, 0.9); margin: 0 0 15px 0; font-size: 14px;">
+        6桁のコードを入力してデータを復元
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <input type="text" id="shareCodeInput" placeholder="AB12CD" maxlength="6" style="width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; text-transform: uppercase; text-align: center; letter-spacing: 4px; font-weight: 600; box-sizing: border-box;">
+        <button id="restoreShareCodeBtn" style="width: 100%; padding: 12px; background: white; color: #667eea; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+          復元
+        </button>
+      </div>
+    </div>
+    
+    <!-- コード生成（下に移動） -->
+    <div style="background: rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 20px; backdrop-filter: blur(10px);">
+      <h3 style="color: white; margin: 0 0 12px 0; font-size: 16px;">📤 コードを生成</h3>
+      <p style="color: rgba(255, 255, 255, 0.9); margin: 0 0 15px 0; font-size: 14px;">
+        選択した品目を保存して、6桁のコードを生成します
+      </p>
+      
+      <button id="generateShareCodeBtn" style="width: 100%; padding: 14px; background: white; color: #667eea; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.3s;">
+        コードを生成
+      </button>
+      
+      <!-- 生成されたコード表示 -->
+      <div id="shareCodeResult" style="display: none; margin-top: 15px; background: rgba(255, 255, 255, 0.25); border-radius: 8px; padding: 15px;">
+        <p style="color: white; margin: 0 0 10px 0; font-size: 14px;">生成されたコード:</p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <input type="text" id="shareCodeOutput" readonly style="width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 20px; font-weight: 700; text-align: center; letter-spacing: 4px; background: white; color: #667eea; box-sizing: border-box;">
+          <button id="copyShareCodeBtn" style="width: 100%; padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+            📋 コピー
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
   
-  <!-- 呪文を生成 -->
-  <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-    <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #1e293b;">呪文を生成</h3>
-    <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">現在選択中の品目から呪文を作成します</p>
-    <button id="generateSpellBtn" style="width: 100%; background: linear-gradient(45deg, #8b5cf6, #7c3aed); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
-      呪文を生成
-    </button>
-    <textarea id="spellOutput" readonly style="width: 100%; min-height: 100px; margin-top: 12px; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: monospace; font-size: 12px; display: none;"></textarea>
-    <button id="copySpellBtn" style="width: 100%; background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; margin-top: 8px; display: none;">
-      📋 コピー
-    </button>
-  </div>
+  <!-- 復活の呪文（オプション） -->
+  <details style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px; border: 1px solid rgba(255, 255, 255, 0.1);">
+    <summary style="color: rgba(255, 255, 255, 0.8); cursor: pointer; font-size: 14px; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 8px;">
+      <span>▶</span>
+      <span>その他のオプション（ローカルバックアップ）</span>
+    </summary>
+    
+    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+      <h3 style="color: rgba(255, 255, 255, 0.9); margin: 0 0 12px 0; font-size: 16px;">🔮 復活の呪文</h3>
+      <p style="color: rgba(255, 255, 255, 0.7); margin: 0 0 15px 0; font-size: 13px;">
+        オフライン対応・完全個人管理のバックアップ
+      </p>
+      
+      <!-- 呪文生成 -->
+      <div style="margin-bottom: 20px;">
+        <button id="generateSpellBtn" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
+          呪文を生成
+        </button>
+        
+        <textarea id="spellOutput" readonly style="display: none; width: 100%; margin-top: 10px; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; background: rgba(255, 255, 255, 0.1); color: white; font-size: 12px; font-family: monospace; resize: vertical; min-height: 80px; box-sizing: border-box;"></textarea>
+        
+        <button id="copySpellBtn" style="display: none; width: 100%; margin-top: 8px; padding: 10px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
+          📋 呪文をコピー
+        </button>
+      </div>
+      
+      <!-- 呪文から復元 -->
+      <div>
+        <textarea id="spellInput" placeholder="ここに呪文を貼り付け" style="width: 100%; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; background: rgba(255, 255, 255, 0.1); color: white; font-size: 12px; font-family: monospace; resize: vertical; min-height: 80px; margin-bottom: 10px; box-sizing: border-box;"></textarea>
+        
+        <button id="restoreSpellBtn" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
+          呪文から復元
+        </button>
+      </div>
+    </div>
+  </details>
   
-  <!-- 呪文から復元 -->
-  <div style="background: white; border-radius: 12px; padding: 20px;">
-    <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #1e293b;">呪文から復元</h3>
-    <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">呪文を貼り付けてデータを復元します</p>
-    <textarea id="spellInput" placeholder="ここに呪文を貼り付けてください..." style="width: 100%; min-height: 100px; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: monospace; font-size: 12px; font-size: 16px;"></textarea>
-    <button id="restoreSpellBtn" style="width: 100%; background: linear-gradient(45deg, #f59e0b, #d97706); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; margin-top: 8px;">
-      復元
-    </button>
-  </div>
 </div>
   
 <div class="search-container">
@@ -1618,8 +1709,6 @@ const logoData = {
 
 // DOM要素
 const elements = {
-userModeBtn: document.getElementById('userMode'),
-adminModeBtn: document.getElementById('adminMode'),
 adminPanel: document.getElementById('adminPanel'),
 fileInput: document.getElementById('fileInput'),
 manualName: document.getElementById('manualName'),
@@ -1661,6 +1750,58 @@ burdenRate2: document.getElementById('burdenRate2'),
 burdenRate3: document.getElementById('burdenRate3')
 };
 
+// キャッシュ管理
+const CacheManager = {
+  CACHE_KEY: 'welfare_equipment_cache',
+  CACHE_TIMESTAMP_KEY: 'welfare_equipment_cache_timestamp',
+  CACHE_DURATION: 24 * 60 * 60 * 1000, // 24時間（ミリ秒）
+  
+  // キャッシュを保存
+  saveCache(data) {
+    try {
+      localStorage.setItem(this.CACHE_KEY, JSON.stringify(data));
+      localStorage.setItem(this.CACHE_TIMESTAMP_KEY, Date.now().toString());
+      console.log(`✅ キャッシュ保存: ${data.length}件`);
+    } catch (error) {
+      console.error('キャッシュ保存エラー:', error);
+    }
+  },
+  
+  // キャッシュを取得
+  getCache() {
+    try {
+      const cached = localStorage.getItem(this.CACHE_KEY);
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.error('キャッシュ読み込みエラー:', error);
+      return null;
+    }
+  },
+  
+  // キャッシュが有効か確認
+  isCacheValid() {
+    const timestamp = localStorage.getItem(this.CACHE_TIMESTAMP_KEY);
+    if (!timestamp) return false;
+    
+    const age = Date.now() - parseInt(timestamp);
+    return age < this.CACHE_DURATION;
+  },
+  
+  // キャッシュをクリア
+  clearCache() {
+    localStorage.removeItem(this.CACHE_KEY);
+    localStorage.removeItem(this.CACHE_TIMESTAMP_KEY);
+    console.log('🗑️ キャッシュをクリアしました');
+  },
+  
+  // 最終更新時刻を取得
+  getLastUpdateTime() {
+    const timestamp = localStorage.getItem(this.CACHE_TIMESTAMP_KEY);
+    if (!timestamp) return null;
+    return new Date(parseInt(timestamp));
+  }
+};
+  
 // Firebase データベース操作
 const FirebaseDB = {
 async getEquipmentCount() {
@@ -1770,7 +1911,78 @@ return querySnapshot.size;
 console.error('全データ削除エラー:', error);
 throw error;
 }
-}
+},
+ async saveSharedCode(data, isPermanent = true) {
+    try {
+      const code = this.generateShareCode();
+      const sharedData = {
+        code: code,
+        salesPerson: data.salesPerson || '',
+        homeName: data.homeName || '',
+        contractorName: data.contractorName || '',
+        remarks: data.remarks || '',
+        burdenRate: data.burdenRate || 1,
+        items: data.items || [],
+        createdBy: data.salesPerson || '',
+        createdAt: new Date(),
+        expiresAt: isPermanent ? null : new Date(Date.now() + 24 * 60 * 60 * 1000),
+        description: data.description || '',
+        lastAccessedAt: new Date()
+      };
+      
+      await window.firestore.addDoc(
+        window.firestore.collection(window.db, 'shared_codes'),
+        sharedData
+      );
+      console.log('✅ 共有コード保存:', code);
+      return code;
+    } catch (error) {
+      console.error('共有コード保存エラー:', error);
+      throw error;
+    }
+  },
+  
+ async loadSharedCode(code) {
+    try {
+      const q = window.firestore.query(
+        window.firestore.collection(window.db, 'shared_codes'),
+        window.firestore.where('code', '==', code.toUpperCase())
+      );
+      const snapshot = await window.firestore.getDocs(q);
+      
+      if (snapshot.empty) {
+        throw new Error('共有コードが見つかりません');
+      }
+      
+      const doc = snapshot.docs[0];
+      const data = doc.data();
+      
+      // 有効期限チェック
+      if (data.expiresAt && data.expiresAt.toDate() < new Date()) {
+        throw new Error('共有コードの有効期限が切れています');
+      }
+      
+      // 最終アクセス日時を更新
+      await window.firestore.updateDoc(doc.ref, {
+        lastAccessedAt: new Date()
+      });
+      
+      console.log('✅ 共有コード読み込み:', code);
+      return data;
+    } catch (error) {
+      console.error('共有コード読み込みエラー:', error);
+      throw error;
+    }
+  },
+  
+  generateShareCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 紛らわしい文字を除外
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
 };
 
 // 初期化
@@ -1781,6 +1993,7 @@ await updateDatabaseCount(); // 件数を表示
 showEmptySearchState();
 loadSelectedItems();
 loadRemarks();
+    updateCacheTimeDisplay(); // キャッシュ時刻を表示
 } catch (error) {
 showError('データベース接続エラーが発生しました。');
 }
@@ -1788,24 +2001,88 @@ showError('データベース接続エラーが発生しました。');
 
 // 福祉用具データの読み込み
 async function loadEquipmentData() {
-try {
-welfareEquipment = await FirebaseDB.loadEquipment();
-filteredItems = welfareEquipment;
-showInfo(`${welfareEquipment.length}件のデータを読み込みました`);
-} catch (error) {
-throw error;
-}
+  try {
+    // キャッシュチェック
+    if (CacheManager.isCacheValid()) {
+      // キャッシュが有効な場合（24時間以内）
+      console.log('📦 キャッシュからデータを読み込み');
+      welfareEquipment = CacheManager.getCache();
+      filteredItems = welfareEquipment;
+      
+      const lastUpdate = CacheManager.getLastUpdateTime();
+      showInfo(`${welfareEquipment.length}件のデータを読み込みました（キャッシュ: ${lastUpdate.toLocaleString('ja-JP')}）`);
+      
+    } else {
+      // キャッシュが無効または存在しない場合
+      console.log('🔄 Firestoreからデータを読み込み');
+      welfareEquipment = await FirebaseDB.loadEquipment();
+      filteredItems = welfareEquipment;
+      
+      // キャッシュに保存
+      CacheManager.saveCache(welfareEquipment);
+      showInfo(`${welfareEquipment.length}件のデータを読み込みました（最新データ取得）`);
+    }
+  } catch (error) {
+    throw error;
+  }
 }
 
 // データベース件数の更新
 async function updateDatabaseCount() {
-try {
-const count = await FirebaseDB.getEquipmentCount();
-elements.dbCountSpan.textContent = `${count.toLocaleString()}件`;
-} catch (error) {
-elements.dbCountSpan.textContent = 'エラー';
-console.error('件数取得エラー:', error);
+  try {
+    const count = await FirebaseDB.getEquipmentCount();
+    elements.dbCountSpan.textContent = `${count.toLocaleString()}件`;
+  } catch (error) {
+    elements.dbCountSpan.textContent = 'エラー';
+    console.error('件数取得エラー:', error);
+  }
 }
+
+// キャッシュ更新時刻を表示
+function updateCacheTimeDisplay() {
+  const cacheTimeSpan = document.getElementById('cacheUpdateTime');
+  if (!cacheTimeSpan) return;
+  
+  const lastUpdate = CacheManager.getLastUpdateTime();
+  if (lastUpdate) {
+    const now = new Date();
+    const diffMs = now - lastUpdate;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (diffHours > 0) {
+      cacheTimeSpan.textContent = `${diffHours}時間前`;
+    } else if (diffMinutes > 0) {
+      cacheTimeSpan.textContent = `${diffMinutes}分前`;
+    } else {
+      cacheTimeSpan.textContent = `たった今`;
+    }
+  } else {
+    cacheTimeSpan.textContent = '-';
+  }
+}
+
+// データベースを強制更新
+async function updateDatabaseCache() {
+  try {
+    showInfo('データベースを更新中...');
+    
+    // Firestoreから最新データを取得
+    welfareEquipment = await FirebaseDB.loadEquipment();
+    filteredItems = welfareEquipment;
+    
+    // キャッシュに保存
+    CacheManager.saveCache(welfareEquipment);
+    
+    // 件数と時刻を更新
+    await updateDatabaseCount();
+    updateCacheTimeDisplay();
+    
+    showInfo(`データベースを更新しました（${welfareEquipment.length}件）`);
+  } catch (error) {
+    showError('データベース更新エラーが発生しました。');
+    console.error('更新エラー:', error);
+  }
 }
 
 // 選択済みアイテムの読み込み
@@ -1850,23 +2127,51 @@ function loadRemarks() {
 
 // 入力時の自動保存（動的に生成される要素にはupdateCalculator内で設定済み）
   
-// モード切り替え
-elements.userModeBtn.addEventListener('click', () => switchMode(false));
-elements.adminModeBtn.addEventListener('click', () => switchMode(true));
+// ドロワーメニュー機能
+function openDrawer() {
+  document.getElementById('drawerOverlay').style.display = 'block';
+  document.getElementById('drawerMenu').style.left = '0';
+}
 
-// 履歴ボタン
-document.getElementById('historyMode').addEventListener('click', () => {
-  // 全モードボタンを非アクティブに
-  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-  // 履歴ボタンをアクティブに
-  document.getElementById('historyMode').classList.add('active');
+function closeDrawer() {
+  document.getElementById('drawerOverlay').style.display = 'none';
+  document.getElementById('drawerMenu').style.left = '-280px';
+}
+
+function switchToMode(mode) {
+  // ドロワーメニューのアクティブ状態を更新
+  document.querySelectorAll('.drawer-menu-item').forEach(btn => btn.classList.remove('active'));
   
+  if (mode === 'user') {
+    document.getElementById('drawerUserMode').classList.add('active');
+    document.getElementById('currentModeName').textContent = '利用者モード';
+    switchMode(false);
+  } else if (mode === 'admin') {
+    document.getElementById('drawerAdminMode').classList.add('active');
+    document.getElementById('currentModeName').textContent = '管理者モード';
+    switchMode(true);
+  } else if (mode === 'history') {
+    document.getElementById('drawerHistoryMode').classList.add('active');
+    document.getElementById('currentModeName').textContent = '履歴';
+    showHistoryMode();
+  } else if (mode === 'spell') {
+    document.getElementById('drawerSpellMode').classList.add('active');
+    document.getElementById('currentModeName').textContent = '共有・保存';
+    showSpellMode();
+  }
+  
+  closeDrawer();
+}
+
+// 履歴モードを表示
+function showHistoryMode() {
   // 全セクションを非表示
   elements.adminPanel.classList.remove('active');
   document.querySelector('.search-container').style.display = 'none';
   document.querySelector('.favorite-section').style.display = 'none';
   document.getElementById('searchResults').style.display = 'none';
   document.querySelector('.calculator').style.display = 'none';
+  document.getElementById('spellSection').style.display = 'none';
   
   // モバイルの「計算結果を表示」ボタンを非表示
   if (elements.toggleCalculatorBtn) {
@@ -1878,16 +2183,36 @@ document.getElementById('historyMode').addEventListener('click', () => {
   
   // 履歴を読み込み
   loadHistory();
-});
+}
+
+function showSpellMode() {
+  // 全セクションを非表示
+  elements.adminPanel.classList.remove('active');
+  document.querySelector('.search-container').style.display = 'none';
+  document.querySelector('.favorite-section').style.display = 'none';
+  document.getElementById('searchResults').style.display = 'none';
+  document.querySelector('.calculator').style.display = 'none';
+  document.getElementById('historySection').style.display = 'none';
+  
+  // モバイルの「計算結果を表示」ボタンを非表示
+  if (elements.toggleCalculatorBtn) {
+    elements.toggleCalculatorBtn.style.display = 'none';
+  }
+  
+  // 共有セクションを表示
+  document.getElementById('spellSection').style.display = 'block';
+}
+
+// ハンバーガーメニューボタン
+document.getElementById('hamburgerBtn').addEventListener('click', openDrawer);
 
 function switchMode(admin) {
   isAdminMode = admin;
-  elements.userModeBtn.classList.toggle('active', !admin);
-  elements.adminModeBtn.classList.toggle('active', admin);
   elements.adminPanel.classList.toggle('active', admin);
   
-  // 履歴セクションを非表示
+  // 履歴セクションと復活の呪文セクションを非表示
   document.getElementById('historySection').style.display = 'none';
+  document.getElementById('spellSection').style.display = 'none';
   
   // 検索窓とお気に入りは常に表示
   document.querySelector('.search-container').style.display = 'block';
@@ -1897,12 +2222,17 @@ function switchMode(admin) {
   if (admin) {
     // 管理者モードでは計算機を非表示
     document.querySelector('.calculator').style.display = 'none';
-  } else {
+ } else {
     // 利用者モードでは計算機を表示（モバイルは除く）
     if (window.innerWidth >= 768) {
       document.querySelector('.calculator').style.display = 'flex';
     } else {
       document.querySelector('.calculator').style.display = 'none';
+    }
+    
+    // モバイルの場合、「計算結果を表示」ボタンを再表示
+    if (window.innerWidth < 768 && elements.toggleCalculatorBtn) {
+      elements.toggleCalculatorBtn.style.display = 'block';
     }
   }
   
@@ -2006,6 +2336,13 @@ elements.clearDatabaseBtn.addEventListener('click', handleClearDatabase);
 
 // 件数更新
 elements.refreshCountBtn.addEventListener('click', updateDatabaseCount);
+
+ // データを更新ボタン
+document.getElementById('updateDataBtn').addEventListener('click', async () => {
+  if (confirm('データベースから最新データを取得しますか？')) {
+    await updateDatabaseCache();
+  }
+}); 
 
 async function handleClearDatabase() {
 // 二重確認で安全性を高める
@@ -2585,26 +2922,30 @@ summaryHTML += `
 
 elements.selectedItemsContainer.innerHTML += summaryHTML;
 
-// 入力欄の値を復元
-const savedHomeName = sessionStorage.getItem('homeName') || '';
-const savedContractorName = sessionStorage.getItem('contractorName') || '';
-const savedRemarks = sessionStorage.getItem('remarksText') || '';
-
+// 入力欄の値を復元（既存の値を優先）
 const homeNameInput = document.getElementById('homeNameInput');
 const contractorNameInput = document.getElementById('contractorNameInput');
 const remarksInput = document.getElementById('remarksInput');
 
 if (homeNameInput) {
-homeNameInput.value = savedHomeName;
-homeNameInput.addEventListener('input', saveRemarks);
+  // 既存の要素から現在の値を取得
+  const currentHomeName = elements.homeNameInput?.value || '';
+  const currentContractorName = elements.contractorNameInput?.value || '';
+  const currentRemarks = elements.remarksInput?.value || '';
+  
+  // 現在の値がある場合はそれを使用、なければsessionStorageから復元
+  homeNameInput.value = currentHomeName || sessionStorage.getItem('homeName') || '';
+  homeNameInput.addEventListener('input', saveRemarks);
 }
 if (contractorNameInput) {
-contractorNameInput.value = savedContractorName;
-contractorNameInput.addEventListener('input', saveRemarks);
+  const currentContractorName = elements.contractorNameInput?.value || '';
+  contractorNameInput.value = currentContractorName || sessionStorage.getItem('contractorName') || '';
+  contractorNameInput.addEventListener('input', saveRemarks);
 }
 if (remarksInput) {
-remarksInput.value = savedRemarks;
-remarksInput.addEventListener('input', saveRemarks);
+  const currentRemarks = elements.remarksInput?.value || '';
+  remarksInput.value = currentRemarks || sessionStorage.getItem('remarksText') || '';
+  remarksInput.addEventListener('input', saveRemarks);
 }
 
 // 要素参照を更新
@@ -2847,20 +3188,38 @@ generatePDF();
 
 // PDF生成関数
 async function generatePDF() {
-if (selectedItems.length === 0) {
-alert('印刷する品目がありません。まず福祉用具を選択してください。');
-return;
-}
+  if (selectedItems.length === 0) {
+    alert('印刷する品目がありません。まず福祉用具を選択してください。');
+    return;
+  }
 
-try {
-elements.printBtn.disabled = true;
-elements.printBtn.textContent = '生成中...';
+  try {
+    elements.printBtn.disabled = true;
+    elements.printBtn.textContent = '生成中...';
+    
+    // 共有コード生成
+    let shareCode = '';
+    try {
+      const shareData = {
+        salesPerson: currentSalesPerson || '未設定',
+        homeName: elements.homeNameInput?.value || '',
+        contractorName: elements.contractorNameInput?.value || '',
+        remarks: elements.remarksInput?.value || '',
+        burdenRate: burdenRate,
+        items: selectedItems,
+        description: ''
+      };
+      shareCode = await FirebaseDB.saveSharedCode(shareData, true);
+      console.log('✅ 共有コード生成:', shareCode);
+    } catch (error) {
+      console.error('共有コード生成エラー:', error);
+    }
 
 const { jsPDF } = window.jspdf;
 const pdf = new jsPDF('p', 'mm', 'a4');
 
 // 1ページ目と2ページ目を個別に生成
-const printContent = createPrintHTML();
+const printContent = createPrintHTML(shareCode);
 const parser = new DOMParser();
 const doc = parser.parseFromString(printContent, 'text/html');
 const pages = doc.querySelectorAll('.pdf-page');
@@ -2926,8 +3285,8 @@ elements.printBtn.innerHTML = '📄 印刷';
 }
 
 // 印刷用HTML作成関数
-function createPrintHTML() {
-const currentDate = new Date().toLocaleDateString('ja-JP');
+function createPrintHTML(shareCode = '') {
+  const currentDate = new Date().toLocaleDateString('ja-JP');
 
 // 通常の点数計算（実費以外）
 const normalPoints = selectedItems
@@ -3093,6 +3452,14 @@ ${generateItemsHTML(page1Items, 0)}
 
 // 11件以下の場合は1ページ目に署名欄と文言を追加
 if (!needsSecondPage) {
+  // 共有コード表示を追加
+  if (shareCode) {
+    page1HTML += `
+<div style="position: absolute; bottom: 10px; right: 10px; font-size: 10px; color: #000; font-weight: 600;">
+${shareCode}
+</div>
+`;
+  }
 page1HTML += signatureAndFooter;
 }
 
@@ -3126,6 +3493,12 @@ ${logoHTML}
 ${generateItemsHTML(page2Items, itemsPerPage)}
 </tbody>
 </table>
+
+${shareCode ? `
+<div style="position: absolute; bottom: 10px; right: 10px; font-size: 10px; color: #000; font-weight: 600;">
+${shareCode}
+</div>
+` : ''}
 
 ${signatureAndFooter}
 </div>
@@ -3256,8 +3629,19 @@ function restoreFromHistory(id) {
     if (remarksInput) remarksInput.value = item.remarks || '';
   }, 100);
   
-  // 利用者モードに切り替え
-  document.getElementById('userMode').click();
+// 利用者モードに切り替え
+  switchMode(false);
+  
+  // 履歴セクションを非表示、検索セクションを表示
+  document.getElementById('historySection').style.display = 'none';
+  document.querySelector('.search-container').style.display = 'block';
+  document.querySelector('.favorite-section').style.display = 'block';
+  document.getElementById('searchResults').style.display = 'block';
+  
+  // ドロワーメニューの状態を更新
+  document.querySelectorAll('.drawer-menu-item').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('drawerUserMode').classList.add('active');
+  document.getElementById('currentModeName').textContent = '利用者モード';
   
   // モバイルの場合、計算機の状態をリセット
   if (window.innerWidth < 768) {
@@ -3276,6 +3660,266 @@ function restoreFromHistory(id) {
 
 window.restoreFromHistory = restoreFromHistory;
 
+// 復活の呪文機能
+function generateSpell() {
+  if (selectedItems.length === 0) {
+    alert('選択した品目がありません。');
+    return;
+  }
+  
+  // 最小限のデータのみ保存
+  const spellData = {
+    v: 1,
+    s: currentSalesPerson || '',
+    h: elements.homeNameInput?.value || '',
+    c: elements.contractorNameInput?.value || '',
+    r: elements.remarksInput?.value || '',
+    b: burdenRate,
+    i: selectedItems.map(item => {
+      const obj = { n: item.name, p: item.points };
+      if (item.quantity !== 1) obj.q = item.quantity;
+      if (item.isHalfMonth) obj.h = 1;
+      return obj;
+    })
+  };
+  
+  // JSON → 圧縮 → Base64URL
+  const jsonStr = JSON.stringify(spellData);
+  const compressed = pako.deflate(jsonStr);
+  const base64 = btoa(String.fromCharCode.apply(null, compressed));
+  const spell = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  
+  // 表示
+  const output = document.getElementById('spellOutput');
+  const copyBtn = document.getElementById('copySpellBtn');
+  output.value = spell;
+  output.style.display = 'block';
+  copyBtn.style.display = 'block';
+}
+
+function restoreFromSpell() {
+  const input = document.getElementById('spellInput');
+  let spell = input.value.trim();
+  
+  if (!spell) {
+    alert('呪文を入力してください。');
+    return;
+  }
+  
+  try {
+    // Base64URL → Base64
+    spell = spell.replace(/-/g, '+').replace(/_/g, '/');
+    while (spell.length % 4) spell += '=';
+    
+    // Base64 → 解凍 → JSON
+    const compressed = Uint8Array.from(atob(spell), c => c.charCodeAt(0));
+    const jsonStr = pako.inflate(compressed, { to: 'string' });
+    const data = JSON.parse(jsonStr);
+    
+    // データを復元
+    selectedItems = (data.i || []).map(item => ({
+      name: item.n,
+      points: item.p,
+      quantity: item.q || 1,
+      isHalfMonth: item.h === 1,
+      category: '',
+      taisCode: ''
+    }));
+    
+    burdenRate = data.b || 1;
+    
+    document.querySelectorAll('.burden-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (parseFloat(btn.dataset.rate) === burdenRate) {
+        btn.classList.add('active');
+      }
+    });
+    
+    updateCalculator();
+    updateMobileCount();
+    saveSelectedItems();
+    
+    setTimeout(() => {
+      const homeInput = document.getElementById('homeNameInput');
+      const contractorInput = document.getElementById('contractorNameInput');
+      const remarksInput = document.getElementById('remarksInput');
+      
+      if (homeInput) homeInput.value = data.h || '';
+      if (contractorInput) contractorInput.value = data.c || '';
+      if (remarksInput) remarksInput.value = data.r || '';
+    }, 100);
+    
+    document.getElementById('userMode').click();
+    
+    // モバイルの場合、「計算結果を表示」ボタンを再表示
+    if (window.innerWidth < 768) {
+      const calculator = document.querySelector('.calculator');
+      calculator.style.display = 'none';
+      calculator.classList.remove('show');
+      
+      if (elements.toggleCalculatorBtn) {
+        elements.toggleCalculatorBtn.style.display = 'block';
+      }
+    }
+    
+    alert('呪文から復元しました！');
+    input.value = '';
+    
+    } catch (error) {
+    alert('呪文が無効です。正しい呪文を入力してください。');
+    console.error('復元エラー:', error);
+  }
+}
+
+// ボタンのイベントリスナー
+document.getElementById('generateSpellBtn').addEventListener('click', generateSpell);
+document.getElementById('copySpellBtn').addEventListener('click', () => {
+  const output = document.getElementById('spellOutput');
+  output.select();
+  document.execCommand('copy');
+  alert('呪文をコピーしました！');
+});
+document.getElementById('restoreSpellBtn').addEventListener('click', restoreFromSpell);
+
+// 共有コード機能
+async function generateShareCode() {
+  if (selectedItems.length === 0) {
+    alert('選択した品目がありません。');
+    return;
+  }
+  
+  try {
+    const shareData = {
+      salesPerson: currentSalesPerson || '未設定',
+      homeName: elements.homeNameInput?.value || '',
+      contractorName: elements.contractorNameInput?.value || '',
+      remarks: elements.remarksInput?.value || '',
+      burdenRate: burdenRate,
+      items: selectedItems,
+      description: ''
+    };
+    
+    showInfo('共有コードを生成中...');
+    const code = await FirebaseDB.saveSharedCode(shareData, true); // 常に無期限
+    
+    // コードを表示
+    document.getElementById('shareCodeOutput').value = code;
+    document.getElementById('shareCodeResult').style.display = 'block';
+    
+    showInfo(`共有コードを生成しました: ${code}`);
+  } catch (error) {
+    showError('共有コード生成に失敗しました。');
+    console.error('共有コード生成エラー:', error);
+  }
+}
+
+async function restoreFromShareCode() {
+  const input = document.getElementById('shareCodeInput');
+  const code = input.value.trim().toUpperCase();
+  
+  if (!code) {
+    alert('共有コードを入力してください。');
+    return;
+  }
+  
+  if (code.length !== 6) {
+    alert('共有コードは6桁です。');
+    return;
+  }
+  
+  try {
+    showInfo('データを読み込み中...');
+    const data = await FirebaseDB.loadSharedCode(code);
+    
+    // データを復元
+    selectedItems = data.items || [];
+    burdenRate = data.burdenRate || 1;
+    
+    // 負担割合ボタンを更新
+    document.querySelectorAll('.burden-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (parseFloat(btn.dataset.rate) === burdenRate) {
+        btn.classList.add('active');
+      }
+    });
+    
+    updateCalculator();
+    updateMobileCount();
+    saveSelectedItems();
+    
+    // 入力欄を復元
+    setTimeout(() => {
+      const homeInput = document.getElementById('homeNameInput');
+      const contractorInput = document.getElementById('contractorNameInput');
+      const remarksInput = document.getElementById('remarksInput');
+      
+      if (homeInput) homeInput.value = data.homeName || '';
+      if (contractorInput) contractorInput.value = data.contractorName || '';
+      if (remarksInput) remarksInput.value = data.remarks || '';
+    }, 100);
+    
+    // 利用者モードに切り替え
+    document.getElementById('userMode').click();
+    
+    // モバイルの場合、「計算結果を表示」ボタンを再表示
+    if (window.innerWidth < 768) {
+      const calculator = document.querySelector('.calculator');
+      calculator.style.display = 'none';
+      calculator.classList.remove('show');
+      
+      if (elements.toggleCalculatorBtn) {
+        elements.toggleCalculatorBtn.style.display = 'block';
+      }
+    }
+    
+    showInfo('共有コードから復元しました！');
+    input.value = '';
+    
+  } catch (error) {
+    showError(error.message || '共有コードの読み込みに失敗しました。');
+    console.error('共有コード復元エラー:', error);
+  }
+}
+
+// 共有コードボタンのイベントリスナー
+document.getElementById('generateShareCodeBtn').addEventListener('click', generateShareCode);
+document.getElementById('copyShareCodeBtn').addEventListener('click', () => {
+  const output = document.getElementById('shareCodeOutput');
+  output.select();
+  document.execCommand('copy');
+  showInfo('共有コードをコピーしました！');
+});
+document.getElementById('restoreShareCodeBtn').addEventListener('click', restoreFromShareCode);
+
+// 共有コード入力欄で自動変換（IME対応・シンプル版）
+let isComposing = false;
+
+document.getElementById('shareCodeInput').addEventListener('compositionstart', () => {
+  isComposing = true;
+});
+
+document.getElementById('shareCodeInput').addEventListener('compositionend', (e) => {
+  isComposing = false;
+  processShareCodeInput(e.target);
+});
+
+document.getElementById('shareCodeInput').addEventListener('input', (e) => {
+  if (!isComposing) {
+    processShareCodeInput(e.target);
+  }
+});
+
+function processShareCodeInput(input) {
+  const cleaned = input.value
+    .replace(/[^A-Z0-9]/gi, '')  // 英数字以外を削除
+    .toUpperCase()                // 大文字に変換
+    .substring(0, 6);             // 6文字制限
+  
+  if (input.value !== cleaned) {
+    input.value = cleaned;
+  }
+}
+  
 // 担当者管理
 let currentSalesPerson = localStorage.getItem('salesPerson') || '';
 
